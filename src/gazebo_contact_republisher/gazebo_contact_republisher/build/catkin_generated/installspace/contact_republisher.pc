@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: contact_republisher
+Description: Description of contact_republisher
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: gazebo_msgs message_runtime

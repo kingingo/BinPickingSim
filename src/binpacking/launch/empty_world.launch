@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <!-- define arguments -->
+    <arg name="paused" default="true"/>
+    <arg name="use_sim_time" default="false"/>
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="true" />
+    <arg name="verbose" default="true" />
+    <arg name="checkpoint" default="" />
+    <param name="use_gui" value="$(arg gui)" />
+
+    
+    <!-- startup simulated WORLD -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="/home/felix/catkin_ws1/src/binpacking/worlds/empty.world"/>
+        <arg name="paused" value="$(arg paused)" />
+        <arg name="use_sim_time" value="$(arg use_sim_time)" />
+        <arg name="gui" value="$(arg gui)" />
+        <arg name="debug" value="$(arg debug)" />
+        <arg name="verbose" value="$(arg verbose)" />
+    </include>
+
+
+    <node name="binpacking" pkg="binpacking" type="binpacking.py" output="screen">
+        <param name='checkpoint' value="$(arg checkpoint)"/>
+    </node>
+
+    <node name="contact_republisher" pkg="contact_republisher" type="contact_republisher_node"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_broadcaster" args="0 0 0.15 -0.499999999463 0.499999999463 -0.499976836603 0.500023163397 map depth_camera_link" />     
+     
+    <!-- Show in Rviz   -->   
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sensors_tutorial)/config/kinect_coke.rviz"/> 
+    
+</launch>

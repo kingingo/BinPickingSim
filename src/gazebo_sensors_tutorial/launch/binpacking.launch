@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="checkpoint" default="" />
+  <arg name="debug" default="false"/>
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find gazebo_sensors_tutorial)/worlds/binpacking.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world_broadcaster" args="0 0 0.15 -0.499999999463 0.499999999463 -0.499976836603 0.500023163397 map depth_camera_link" />     
+     
+  <!-- Show in Rviz   -->   
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sensors_tutorial)/config/kinect_coke.rviz"/> 
+
+  <node name="binpacking" pkg="binpacking" type="binpacking.py" output="screen">
+      <param name='checkpoint' value="$(arg checkpoint)"/>
+  </node>
+
+  <node name="contact_republisher" pkg="contact_republisher" type="contact_republisher_node"/>
+</launch>

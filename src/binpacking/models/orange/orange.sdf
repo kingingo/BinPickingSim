@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="{model_name}">
+    <pose>0 0 0.5 0 0 0</pose>
+    <static>false</static>
+    <self_collide>1</self_collide>
+    {joint}
+    <link name="{model_name}_link">
+      <inertial>
+        <mass>1</mass>
+        <inertia> 
+          <ixx>0.00256</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+          <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
+          <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
+          <iyy>0.00256</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+          <iyz>0.0</iyz>         <!-- for a box: iyz = 0 -->
+          <izz>0.00256</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+        </inertia>
+      </inertial>
+      <collision name="orange_collision">
+        <!-- <geometry><box><size>0.0001 0.0001 0.0001</size></box></geometry> -->
+          <geometry>
+            <mesh>
+              <uri>/home/felix/catkin_ws/src/binpacking/models/orange/meshes/orange.stl</uri>
+            </mesh>
+          </geometry>
+      </collision>
+      <visual name="orange_visual">
+        <material><script><name>Gazebo/{color}</name></script></material>
+        <geometry>
+          <mesh>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/orange/meshes/orange.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <sensor name='my_contact' type='contact'>
+        <contact>
+          <collision>orange_collision</collision>
+        </contact>
+      </sensor>
+    </link>
+  </model>
+</sdf>

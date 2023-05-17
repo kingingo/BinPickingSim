@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/felix/catkin_ws/src/gazebo_contact_republisher/build/devel/setup.sh

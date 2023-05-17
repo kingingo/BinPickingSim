@@ -1,0 +1,8 @@
+prefix=/home/felix/catkin_ws/devel
+
+Name: contact_republisher
+Description: Description of contact_republisher
+Version: 0.0.0
+Cflags: -I/home/felix/catkin_ws/devel/include
+Libs: -L${prefix}/lib 
+Requires: gazebo_msgs message_runtime
