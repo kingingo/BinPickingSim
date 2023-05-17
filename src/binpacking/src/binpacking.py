@@ -44,7 +44,7 @@ point_publisher = None
 path = None
 color_labeling = False
 reset_gz_world = None
-realsense_frame = 'camera_depth_optical_frame'
+camera_frame = 'camera_depth_optical_frame'
 bbox_px = [-0.30, 0.30]
 bbox_py = [-0.45,0.45]
 bbox_pz = [0.3, 0.5]
@@ -80,9 +80,9 @@ def spawn_xml(model_name, modelxml, px = None, py = None, pz = None, is_sdf = Tr
 def spawn(model_name, px = None, py = None, pz = None, is_sdf = True):
   spawn_xml(model_name, open(package_path+'/models/'+model_name+'.sdf', 'r').read(), px, py, pz, is_sdf)
 
-def realsense_set_pose(px = 0, py = 0, pz = 1.9, roll = 0, pitch = 1.61, yaw = 0):
-  #change realsense pose
-  log("change realsense d435 pose")
+def camera_set_pose(px = 0, py = 0, pz = 1.9, roll = 0, pitch = 1.61, yaw = 0):
+  #change camera pose
+  log("change camera pose")
   log("x/y/z: {}/{}/{}".format(px,py,pz))
   log("roll/pitch/yaw: {}/{}/{}".format(roll,pitch,yaw))
 
@@ -100,18 +100,18 @@ def realsense_set_pose(px = 0, py = 0, pz = 1.9, roll = 0, pitch = 1.61, yaw = 0
 
   try:
       resp = set_state( state_msg )
-      log("realsense d435 pose changed")
+      log("camera pose changed")
   except rospy.ServiceException as e:
       log("service call failed: " + e)
 
-def realsense_subscribe_callback(data):
-  global realsense_frame, received_points
+def camera_subscribe_callback(data):
+  global camera_frame, received_points
   assert isinstance(data, PointCloud2)
   if received_points:
     return
 
-  log("realsense_subscribe_callback got data")
-  realsense_frame = data.header.frame_id
+  log("camera_subscribe_callback got data")
+  camera_frame = data.header.frame_id
   """
   cloud = ros_to_pcl(data)
 
@@ -558,13 +558,13 @@ def track_collisions():
   sub.unregister()
   #unpause_physics(EmptyRequest())
 
-def subscribe_to_realsense():
+def subscribe_to_camera():
   global received_points
   #respawn_objects()
   clear_all_forces()
-  #subscribe to realsense d435 
+  #subscribe to camera 
   received_points = False
-  sub = rospy.Subscriber("/camera/depth/points", PointCloud2, realsense_subscribe_callback)
+  sub = rospy.Subscriber("/camera/depth/points", PointCloud2, camera_subscribe_callback)
   log("waiting for incoming points")
   while True:
     rospy.sleep(1)
@@ -834,7 +834,7 @@ def calculate_yaw_pitch_roll(direction_vector):
 
     return yaw, pitch, roll
 
-def calc_realsense_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
+def calc_camera_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
   camera_pos = np.array([x,y,z])
   box_pos = np.array([bx,by,bz])
 
@@ -853,14 +853,14 @@ def calc_realsense_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
 
   return {'x':camera_pos[0], 'y':camera_pos[1], 'z':camera_pos[2], 'yaw': yaw, 'pitch': pitch, 'roll': roll}
 
-def calibrate_realsense():
+def calibrate_camera():
   global xpoint, ypoint, zpoint, worldpoints, bbox_px, bbox_py
 
-  pos = calc_realsense_location()
-  realsense_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+  pos = calc_camera_location()
+  camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
   send_world_frame(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
   
-  sub = rospy.Subscriber("/camera/depth/color/points", PointCloud2, realsense_subscribe_callback)
+  sub = rospy.Subscriber("/camera/depth/color/points", PointCloud2, camera_subscribe_callback)
   log("wait 10 seconds to gather points for calibration")
   rospy.sleep(10)
   sub.unregister()
@@ -895,14 +895,14 @@ def convert_rgb():
   global rgbpoint
   _rgb = []
 
-  print("convert rgb colors...")
+  log("convert rgb colors...")
 
   vol = len(rgbpoint)
   for i in range(vol):
     _rgb.append(float_to_rgb(rgbpoint[i]))
 
   rgbpoint = _rgb
-  print("done :)")
+  log("done :)")
 
 def clear_all_forces():
   for obj in spawned_objects:
@@ -943,12 +943,12 @@ def sample_down_pointcloud():
 
 #Transfrom camera point to world point
 def transform_cp_to_wp(x, y, z):
-  global realsense_frame, listener
+  global camera_frame, listener
   world_name = 'world'
 
   p1 = PoseStamped()
   p1.header.stamp = rospy.Time.now()
-  p1.header.frame_id = realsense_frame
+  p1.header.frame_id = camera_frame
   p1.pose.position.x = x
   p1.pose.position.y = y
   p1.pose.position.z = z
@@ -961,11 +961,11 @@ def transform_cp_to_wp(x, y, z):
   return [p2.pose.position.x, p2.pose.position.y, p2.pose.position.z]
 
 def transform_points():
-  global worldpoints, xpoint, ypoint, zpoint, realsense_frame
+  global worldpoints, xpoint, ypoint, zpoint, camera_frame
   worldpoints = []
 
   volume = len(xpoint)
-  log("Transform points from '{}' frame to 'world' frame, volume = {}".format(realsense_frame,volume))
+  log("Transform points from '{}' frame to 'world' frame, volume = {}".format(camera_frame,volume))
   for i in range(volume):
       x = xpoint[i]
       y = ypoint[i]
@@ -1018,9 +1018,9 @@ if __name__ == '__main__':
   clear_body_wrench = rospy.ServiceProxy('gazebo/clear_body_wrenches', BodyRequest)
   #link_states = rospy.ServiceProxy('/gazebo/link_states', Empty)
 
-
-  pos = calc_realsense_location()
-  realsense_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+  rospy.sleep(1)
+  pos = calc_camera_location()
+  camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
   #spawn stackingbox
   xml = _get_xml('stackingbox', 'Blue')
@@ -1081,10 +1081,10 @@ if __name__ == '__main__':
   for i in range(len(positions)):
     _pos = positions[i]
     log("POS: {}".format(_pos))
-    pos = calc_realsense_location(_pos[0], _pos[1], _pos[2], 0 , 0, 0.3)
-    realsense_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+    pos = calc_camera_location(_pos[0], _pos[1], _pos[2], 0 , 0, 0.3)
+    camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
     send_world_frame(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
-    subscribe_to_realsense()
+    subscribe_to_camera()
     transform_points()
 
     xp = xp + xpoint
@@ -1122,8 +1122,8 @@ if __name__ == '__main__':
     log("wait {} seconds".format(sleeptime))
     rospy.sleep(sleeptime)
     clear_all_forces()
-    #subscribe to realsense and gather pointsg
-    subscribe_to_realsense()
+    #subscribe to camera and gather pointsg
+    subscribe_to_camera()
     transform_points()
     write_pointcloud(reset = False, prefix = '0_', colored_file= False, label= False) 
     #write_pointcloud(reset = False, prefix = '1_', colored_file= False, label= False, RGB = False) 

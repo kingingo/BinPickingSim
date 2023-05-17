@@ -2,7 +2,7 @@
 
 installation:
 ````
-export GAZEBO_MODEL_PATH=~/catkin_ws9/src/gazebo_sensors_tutorial/models/:${GAZEBO_MODEL_PATH}
+export GAZEBO_MODEL_PATH=~/catkin_ws/src/gazebo_sensors_tutorial/models/:${GAZEBO_MODEL_PATH}
 source ~/.bashrc
 ````
 
