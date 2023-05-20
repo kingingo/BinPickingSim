@@ -48,6 +48,13 @@ camera_frame = 'camera_depth_optical_frame'
 bbox_px = [-0.30, 0.30]
 bbox_py = [-0.45,0.45]
 bbox_pz = [0.3, 0.5]
+color_codes = {
+  'Yellow': "255 225 20",
+  'Red': "229 0 0",
+  'Orange': "249 115 6",
+  'Blue': "3 67 223"
+  }
+object_color_codes = []
 
 def spawn_xml(model_name, modelxml, px = None, py = None, pz = None, is_sdf = True, sleeptime = 1):
   pose = Pose()
@@ -192,106 +199,6 @@ def fill_color_label():
     clabelpoint[i] = get_label(r,g,b)
 
   log("Color labeling done :)")
-
-def create_colored_file(file, path):
-  f = open(path + "/" + file, 'r')
-  lines = f.readlines()
-
-  content = ''
-  start_reading = False
-  labels_count = [0,0,0]
-  locations = []
-  for line in lines:
-      if 'end_header' in line:
-          start_reading = True
-          content += line + ""
-          continue
-      
-      if not start_reading:
-          content += line + ""
-      else:
-          data = line.split()
-          x = data[0]
-          y = data[1]
-          z = data[2]
-          r = data[3]
-          g = data[4]
-          b = data[5]
-          label = data[6]
-
-          locations.append([x,y,z, 1])
-
-          if int(label) > 1:
-              #darkgreen
-              labels_count[0]+=1
-              r = 0
-              g = 100
-              b = 0
-          elif int(label) == 1:
-              #darkred
-              labels_count[1]+=1
-              r = 139
-              g = 0
-              b = 0
-          else:
-              #gray
-              labels_count[2]+=1
-              r = 169
-              g = 169
-              b = 169
-
-          content += "{} {} {} {} {} {} {}\n".format(x,y,z,r,g,b,label)
-  
-  f.close()
-  f = open(path + "/color_"+file, 'wb')
-  f.write(str(content).encode('utf-8'))
-  f.close()
-  
-  log("label > 1 {}".format(labels_count[0]))
-  log("label == 1 {}".format(labels_count[1]))
-  log("else {}".format(labels_count[2]))
-  log("created colored ply file")
-
-def collision_point_sdf(radius = 0.01):
-  return """
-  <?xml version='1.0'?>
-  <sdf version="1.4">
-    <model name="point">
-      <static>true</static>
-      <self_collide>1</self_collide>
-      <link name="link">
-        <collision name="point_collision">
-          <geometry>
-            <sphere>
-              <radius>{r}</radius>
-            </sphere>
-          </geometry>
-          <surface>
-            <contact>
-              <collide_without_contact>true</collide_without_contact>
-              <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
-            </contact>
-          </surface>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <sphere>
-              <radius>{r}</radius>
-            </sphere>
-          </geometry>
-          <material><script><name>Gazebo/Yellow</name></script></material>
-        </visual>
-        <sensor name='my_contact' type='contact'>
-          <update_rate>50.0</update_rate>
-          <always_on>1</always_on>
-          <contact>
-            <collision>point_collision</collision>
-          </contact>
-        </sensor>
-      </link>
-    </model>
-  </sdf>
-  """.format(r=radius)
           
 def get_pose(object):
   state = get_state(object, '')
@@ -394,7 +301,7 @@ def collision_callback(contacts):
           if use_point_index:
             labelpoint[point_index] = 1
           else:
-            labelpoint[(list_index+1) * point_index_list[list_index]] = 1
+            labelpoint[label_index] = 1
           #log("labeled index={} stackingbox".format(point_index))
         else:
           id = 0
@@ -406,7 +313,7 @@ def collision_callback(contacts):
           if use_point_index:
             labelpoint[point_index] = id
           else:
-            labelpoint[(list_index+1) * point_index_list[list_index]] = id
+            labelpoint[label_index] = id
           #log("labeled index={} id={}".format(point_index, id))
 
 def test_collide(object, index, x,y,z, sleeptime = 0.001, set_point_index = True):
@@ -477,6 +384,30 @@ def even_chunks_list(world_chunks):
       for j in range( (world_chunks_size - length) ):
         world_chunks[i].append(None)
 
+def chunkIt(seq, num = 10):
+    avg = math.ceil(len(seq) / float(num))
+    out = []
+    last = 0.0
+
+    while last < len(seq):
+        out.append(seq[int(last):int(last + avg)])
+        last += avg
+
+    return out
+
+def max(world_chunks):
+  global world_chunks_size
+
+  for i in range(len(world_chunks)):
+    length = len(world_chunks[i])
+    if world_chunks_size is None:
+      world_chunks_size = length
+    else:
+      if world_chunks_size < length:
+        world_chunks_size = length
+  
+  log("world_chunks_size({})".format(world_chunks_size))
+
 def track_collisions():
   global point_index_list, worldpoints, clabelpoint
   #respawn objects to static so that they dont move by collisions
@@ -486,7 +417,6 @@ def track_collisions():
   sub = rospy.Subscriber("contacts", ContactsState, collision_callback)
   log("start points")
 
-  """
   point_amount = 10
   world_chunks = chunkIt(worldpoints, point_amount)
   even_chunks_list(world_chunks)
@@ -554,6 +484,7 @@ def track_collisions():
 
     test_collide('point', i, x, y, z, 0.01)
   delete_object('point')
+  """
 
   sub.unregister()
   #unpause_physics(EmptyRequest())
@@ -603,9 +534,10 @@ def reset_world():
   del worldpoints[:]
   del clabelpoint[:]
   del labelpoint[:]
+  del object_color_codes[:]
   clear_path()
 
-def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = True, label = True, RGB = True):
+def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = True, with_label = True, RGB = True):
   global xpoint, ypoint, zpoint, labelpoint, clabelpoint, worldpoints
 
   if not (format is 'ply' or format is 'txt'):
@@ -638,19 +570,17 @@ def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = T
       wr('property uchar blue\n')
     else:
       wr('property float color\n')
-    if label:
+
+    if with_label:
       wr('property uchar label\n')
-   # wr('property uchar clabel\n')
+      if format is not 'txt':
+        wr('property uchar clabel\n')
     wr('end_header\n')
   
   for i in range(volume):
     x = xpoint[i]
     y = ypoint[i]
     z = zpoint[i]
-
-    x = worldpoints[i][0]
-    y = worldpoints[i][1]
-    z = worldpoints[i][2]
 
     color = rgbpoint[i]
     if type(color) is list:
@@ -664,7 +594,7 @@ def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = T
         g = rgb[1]
         b = rgb[2]
       else:
-        if label:
+        if with_label:
           fid.write('{} {} {} {} {}\n'.format(x,y,z,color,label))
         else:
           fid.write('{} {} {} {}\n'.format(x,y,z,color))
@@ -673,20 +603,58 @@ def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = T
     label = labelpoint[i]
 
     if format is 'ply':
-      #clabel = clabelpoint[i]
+      clabel = clabelpoint[i]
 
-      if label:
-        fid.write('{} {} {} {} {} {} {}\n'.format(x,y,z,r,g,b,label))
+      if with_label:
+        fid.write('{} {} {} {} {} {} {} {}\n'.format(x,y,z,r,g,b,label,clabel))
       else:
         fid.write('{} {} {} {} {} {}\n'.format(x,y,z,r,g,b))
     elif format is 'txt':
       fid.write('{} {} {} {} {} {} {}\n'.format(x,y,z,r,g,b,label))
   fid.close()
   log("pointcloud saved to {}".format(filepath))
-  if colored_file:
-    create_colored_file(filename, path)
   if reset:
     reset_world()
+
+def filter_points_by_colours():
+  global xpoint, ypoint, zpoint, rgbpoint, labelpoint, clabelpoint
+  _xpoint = []
+  _ypoint = []
+  _zpoint = []
+  _rgbpoint = []
+  _labelpoint = []
+  _clabelpoint = []
+
+  volume = len(xpoint)
+  log("filter for important points, volume={}".format(volume))
+  for i in range(volume):
+    x = xpoint[i]
+    y = ypoint[i]
+    z = zpoint[i]
+    rgb = rgbpoint[i]
+
+    if not (type(rgb) == list):
+      rgb = float_to_rgb(rgb)
+
+    r = rgb[0]
+    g = rgb[1]
+    b = rgb[2]
+
+    if r != 155 and g != 155 and b != 155:
+      _xpoint.append(x)
+      _ypoint.append(y)
+      _zpoint.append(z)
+      _labelpoint.append(labelpoint[i])
+      _clabelpoint.append(clabelpoint[i])
+      _rgbpoint.append(rgbpoint[i])
+  log("{} points left".format(len(_xpoint)))
+  xpoint = _xpoint
+  ypoint = _ypoint
+  zpoint = _zpoint
+  labelpoint = _labelpoint
+  clabelpoint = _clabelpoint
+  rgbpoint = _rgbpoint
+
 
 def filter_points(x_min = 0, x_max = 0, y_min = 0, y_max = 0):
   global xpoint, ypoint, zpoint, rgbpoint, labelpoint, clabelpoint, bbox_px, bbox_py, worldpoints
@@ -727,7 +695,26 @@ def filter_points(x_min = 0, x_max = 0, y_min = 0, y_max = 0):
   rgbpoint = _rgbpoint
 
 def delete_object(obj):
-    delete_model(obj)
+    global delete_model
+    try:
+        delete_model(str(obj))
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: " + str(e))
+
+def get_label(r,g,b):
+  global object_color_codes
+  min_diff = 1000
+  min_catId = 0
+
+  for i in range(len(object_color_codes)):
+    obj = object_color_codes[i]
+    delta_e = deltaE_diff([r,g,b], [obj['r'], obj['g'], obj['b']])
+
+    if delta_e < min_diff:
+      min_diff = delta_e
+      min_catId = obj['catId']
+
+  return min_catId
 
 def delete_spawned_objects():
   for obj in spawned_objects:
@@ -744,16 +731,35 @@ def joint_xml(model_name):
     </joint>
   """.format(model_name = model_name)
 
-def _get_xml(model_name, color = 'Yellow', joint = False, static = False):
-  return get_xml(model_name, '/' + model_name + '/', model_name, color, joint)
+def _get_xml(model_name, color = 'Yellow', joint = False, static = False, catId = 0):
+  return get_xml(model_name, '/' + model_name + '/', model_name, color, joint, catId)
 
-def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static = False):
+def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static = False, catId = 0):
+  global object_color_codes 
   xml = open(package_path + '/models/'+path+file_name+'.sdf', 'r').read()
+
+  found = False
+  for i in range(len(object_color_codes)):
+    obj = object_color_codes[i]
+
+    if obj['name'] == model_name:
+      found = True
+      break
+  
+  if not found:
+    rgb = color_codes[color].strip().split(' ')
+    r = int(rgb[0])
+    g = int(rgb[1])
+    b = int(rgb[2])
+    log("Add {} with {}/{}/{} catId={}".format(model_name, r, g, b, catId))
+    object_color_codes.append({'name':model_name, 'r':r, 'g':g, 'b':b, 'catId':catId})
+
   return xml.format(model_name=model_name, color = color, joint = '' if not joint else joint, static = 'false' if not static else 'true')
 
 
 def send_world_frame(x, y, z, roll, pitch, yaw):
   rot = euler_to_quaternion(roll, pitch, yaw)
+  child_frame = "map"
 
   rx = rot[0]
   ry = rot[1]
@@ -765,7 +771,7 @@ def send_world_frame(x, y, z, roll, pitch, yaw):
   
   world_transform.header.stamp = rospy.Time.now()
   world_transform.header.frame_id = "world"
-  world_transform.child_frame_id = "map"
+  world_transform.child_frame_id = child_frame
   world_transform.transform.translation.x = x
   world_transform.transform.translation.y = y
   world_transform.transform.translation.z = z
@@ -774,15 +780,11 @@ def send_world_frame(x, y, z, roll, pitch, yaw):
   world_transform.transform.rotation.z = rz
   world_transform.transform.rotation.w = rw
   tf_broadcaster.sendTransform(world_transform)
-  log("created world frame with base_link as a child frame")
+  log("created world frame with {} as a child frame".format(child_frame))
 
 def spawn_objects(amount = 6, name = 'box', path = '', is_sdf = True, default_color = '', start_id = 0, catId = 0):
   #<pose> x y z roll pitch yaw</pose>
   global bbox_px, bbox_py, bbox_pz
-
-  if default_color == '':
-    colors = ['Red', 'Yellow', 'Purple', 'Orange', 'White', 'Black', 'Green']
-    color_index = 0
 
   #spawn objects
   for i in range(amount):
@@ -791,16 +793,12 @@ def spawn_objects(amount = 6, name = 'box', path = '', is_sdf = True, default_co
     pz = random.uniform(bbox_pz[0], bbox_pz[1])
 
     if default_color == '':
-      color = colors[color_index]
-      color_index+=1
-
-      if len(colors) <= color_index:
-        color_index = 0
+      color = 'Blue'
     else:
       color = default_color
 
     model_name = '{}_{}_{}'.format(catId,start_id+i+2,name)
-    xml = get_xml(name, path, name, color)
+    xml = get_xml(name, path, name, color, catId=catId)
     spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
       
     spawned_objects.append(model_name)
@@ -978,8 +976,16 @@ def transform_points():
       worldpoints.append([_x, _y, _z])
   log("transform done: points={}, worldpoints={}".format(len(xpoint), len(worldpoints)))
 
+def reset_simulation():
+    rospy.wait_for_service('/gazebo/reset_simulation')
+    try:
+        reset_simulation_service = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+        reset_simulation_service()
+    except rospy.ServiceException as e:
+        rospy.logerr("Service call failed: " + str(e))
+
 if __name__ == '__main__':
-  global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state,listener
+  global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state
 
   jump_to_checkpoint = False
   log("init python script...")
@@ -1023,7 +1029,7 @@ if __name__ == '__main__':
   camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
   #spawn stackingbox
-  xml = _get_xml('stackingbox', 'Blue')
+  xml = _get_xml('stackingbox', 'Blue', catId=1)
   spawn_xml('stackingbox', xml)
   #set camera on right position
   rospy.sleep(1)
@@ -1115,31 +1121,29 @@ if __name__ == '__main__':
   for i in range(1000):
     start_time = time.time()
     #spawn objects in box
-    spawn_objects(1, 'banana', '/banana/', True, 'Yellow', catId=2)
-    spawn_objects(1, 'apple', '/apple/', True, 'Red', catId=3)
-    spawn_objects(1, 'orange', '/orange/', True, 'Orange', catId=4)
-    sleeptime = 10
+    spawn_objects(5 + random.randint(8,20), 'banana', '/banana/', True, 'Yellow', catId=2)
+    spawn_objects(5 + random.randint(8,20), 'apple', '/apple/', True, 'Red', catId=3)
+    spawn_objects(5 + random.randint(8,20), 'orange', '/orange/', True, 'Orange', catId=4)
+    sleeptime = 30
     log("wait {} seconds".format(sleeptime))
     rospy.sleep(sleeptime)
     clear_all_forces()
     #subscribe to camera and gather pointsg
     subscribe_to_camera()
+    write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
+    filter_points_by_colours()
     transform_points()
-    write_pointcloud(reset = False, prefix = '0_', colored_file= False, label= False) 
-    #write_pointcloud(reset = False, prefix = '1_', colored_file= False, label= False, RGB = False) 
-    #Transform point from camera frame to world frame
-    transform_points()
-    filter_points(bbox_px[0]-0.05,bbox_px[1]+0.05, bbox_py[0]-0.05, bbox_py[1]+0.05)
+    #filter_points(bbox_px[0]+0.02,bbox_px[1]+0.2, bbox_py[0]-0.2, bbox_py[1]+0.2)
     save_checkpoint()
-    write_pointcloud(reset = False, prefix = '2_', colored_file= False) 
+    write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False) 
     #sample_down_pointcloud()
     convert_rgb()
-    track_collisions()
+    fill_color_label()
+    #track_collisions()
     #storage training data
     write_pointcloud()
     #delete all spawned objects
     delete_spawned_objects()
     diff_time = time.time() - start_time
-    log("the round took "+td(seconds = diff_time))
-
-  rospy.spin()
+    log("the round took {}".format(td(seconds = diff_time)))
+    reset_simulation()

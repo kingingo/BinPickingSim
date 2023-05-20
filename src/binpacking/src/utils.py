@@ -9,6 +9,63 @@ from colorama import Fore
 import ctypes
 from datetime import datetime as dt
 from datetime import timedelta as td
+from colormath.color_objects import sRGBColor, LabColor
+from colormath.color_diff import delta_e_cie1976
+from colormath.color_conversions import convert_color
+
+def deltaE_diff(c1, c2):
+    # Reference color.
+    color1 = sRGBColor(c1[0],c1[1],c1[2], True)
+    # Color to be compared to the reference.
+    color2 = sRGBColor(c2[0],c2[1],c2[2], True)
+    
+    lab1 = convert_color(color1, LabColor)
+    lab2 = convert_color(color2, LabColor)
+    # This is your delta E value as a float.
+    delta_e = delta_e_cie1976(lab1, lab2)
+    
+    return delta_e
+
+def collision_point_sdf(radius = 0.01):
+  return """
+  <?xml version='1.0'?>
+  <sdf version="1.4">
+    <model name="point">
+      <static>true</static>
+      <self_collide>1</self_collide>
+      <link name="link">
+        <collision name="point_collision">
+          <geometry>
+            <sphere>
+              <radius>{r}</radius>
+            </sphere>
+          </geometry>
+          <surface>
+            <contact>
+              <collide_without_contact>true</collide_without_contact>
+              <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>{r}</radius>
+            </sphere>
+          </geometry>
+          <material><script><name>Gazebo/Yellow</name></script></material>
+        </visual>
+        <sensor name='my_contact' type='contact'>
+          <update_rate>50.0</update_rate>
+          <always_on>1</always_on>
+          <contact>
+            <collision>point_collision</collision>
+          </contact>
+        </sensor>
+      </link>
+    </model>
+  </sdf>
+  """.format(r=radius)
 
 def float_to_rgb(float_rgb):
     s = struct.pack('>f', float_rgb)
@@ -23,11 +80,6 @@ def float_to_rgb(float_rgb):
 			
     return color
 
-def get_label(rgb):
-  if rgb[2] == 192:
-    return 1
-  return 0
-
 def euler_to_quaternion(roll, pitch, yaw):
     qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
     qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
@@ -35,29 +87,6 @@ def euler_to_quaternion(roll, pitch, yaw):
     qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
     return [qx, qy, qz, qw]
 
-def chunkIt(seq, num = 10):
-    avg = math.ceil(len(seq) / float(num))
-    out = []
-    last = 0.0
-
-    while last < len(seq):
-        out.append(seq[int(last):int(last + avg)])
-        last += avg
-
-    return out
-
-def max(world_chunks):
-  global world_chunks_size
-
-  for i in range(len(world_chunks)):
-    length = len(world_chunks[i])
-    if world_chunks_size is None:
-      world_chunks_size = length
-    else:
-      if world_chunks_size < length:
-        world_chunks_size = length
-  
-  log("world_chunks_size({})".format(world_chunks_size))
    
 def log(msg):
   now = dt.now()
