@@ -2,19 +2,29 @@
 <sdf version="1.5">
   <model name="{model_name}">
     <pose>0 0 0.5 0 0 0</pose>
-    <static>false</static>
+    <static>{static}</static>
     <self_collide>1</self_collide>
     {joint}
     <link name="{model_name}_link">
       <inertial>
-        <mass>0.1</mass>
+        <mass>2</mass>
+        <!--
         <inertia> 
-          <ixx>0.00000117145</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
-          <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
-          <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
-          <iyy>0.00000113129</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
-          <iyz>0.000000118673241</iyz>         <!-- for a box: iyz = 0 -->
-          <izz>0.0000001084457444</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+          <ixx>0.00000117145</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>        
+          <iyy>0.00000113129</iyy>       
+          <iyz>0.000000118673241</iyz>         
+          <izz>0.0000001084457444</izz>      
+        </inertia>
+        -->
+        <inertia> 
+          <ixx>1.17021E-3</ixx>       
+          <ixy>0.0</ixy>         
+          <ixz>0.0</ixz>        
+          <iyy>1.13007E-3</iyy>       
+          <iyz>1.11855E-4</iyz>         
+          <izz>1.0833E-4</izz>      
         </inertia>
       </inertial>
       <collision name="banana_collision">
@@ -33,11 +43,13 @@
           </mesh>
         </geometry>
       </visual>
+      <!--
       <sensor name='my_contact' type='contact'>
         <contact>
           <collision>banana_collision</collision>
         </contact>
       </sensor>
+      -->
     </link>
   </model>
 </sdf>

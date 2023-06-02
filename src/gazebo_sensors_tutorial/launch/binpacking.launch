@@ -18,16 +18,25 @@
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
     <arg name="headless" value="$(arg headless)"/>
   </include>
-  <node pkg="tf2_ros" type="static_transform_publisher" name="world_broadcaster" args="0 0 0.15 -0.499999999463 0.499999999463 -0.499976836603 0.500023163397 map depth_camera_link" />     
-     
-  <!-- Show in Rviz   -->   
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sensors_tutorial)/config/kinect_coke.rviz"/> 
 
+  <param name="colors" command="$(find xacro)/xacro.py /home/felix/catkin_ws/src/binpacking/models/colors.urdf.xacro" />
+
+  <!-- Show in Rviz   
+  0.0 0.0 1.9 -0.70711, 0.70711, -0.00000, 0.00000 - 38860
+  0.0 0.0 -1.9 0.00000, 0.00000, 0.00000, 1.00000  - 82219
+  0.0 0.0 -1.9 0.0 0.0 0.0 1.0
+  0.0 0.0 1.9 1.00000, 0.00000, 0.00000, 0.00000 - 25470
+  -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world_broadcaster" args="0.0 0.0 0 0.0 0.0 0.0 1.0 map depth_camera_link" />  
+     
+  <!-- Show in Rviz -->  
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sensors_tutorial)/config/kinect_coke.rviz"/> 
+  
   <node name="binpacking" pkg="binpacking" type="binpacking.py" output="screen">
       <param name='checkpoint' value="$(arg checkpoint)"/>
   </node>
 
   <node name="contact_republisher" pkg="contact_republisher" type="contact_republisher_node"/>
 
-  <param name="ray_description" command="$(find xacro)/xacro.py /home/felix/catkin_ws/src/binpacking/models/ray/ray.urdf" />
+  <!--<param name="ray_description" command="$(find xacro)/xacro.py /home/felix/catkin_ws/src/binpacking/models/ray/ray.urdf" />-->
 </launch>

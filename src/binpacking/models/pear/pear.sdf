@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="{model_name}">
+    <pose>0 0 0.5 0 0 0</pose>
+    <static>false</static>
+    <self_collide>1</self_collide>
+    {joint}
+    <link name="{model_name}_link">
+      <inertial>
+        <mass>0.1</mass>
+        <inertia> 
+          <ixx>0.002004E-5</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+          <ixy>0.000004E-5</ixy>         <!-- for a box: ixy = 0 -->
+          <ixz>-0.000011E-5</ixz>         <!-- for a box: ixz = 0 -->
+          <iyy>0.001668E-5</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+          <iyz>-0.000001E-5</iyz>         <!-- for a box: iyz = 0 -->
+          <izz>0.002028E-5</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+        </inertia>
+      </inertial>
+      <collision name="pear_collision">
+        <!-- <geometry><box><size>0.0001 0.0001 0.0001</size></box></geometry> -->
+          <geometry>
+            <mesh>
+              <uri>/home/felix/catkin_ws/src/binpacking/models/pear/meshes/pear.stl</uri>
+            </mesh>
+          </geometry>
+      </collision>
+      <visual name="pear_visual">
+        <material><script><name>Gazebo/{color}</name></script></material>
+        <geometry>
+          <mesh>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/pear/meshes/pear.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <!--
+      <sensor name='my_contact' type='contact'>
+        <contact>
+          <collision>pear_collision</collision>
+        </contact>
+      </sensor>
+      -->
+    </link>
+  </model>
+</sdf>

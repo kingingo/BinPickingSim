@@ -23,14 +23,14 @@
     <!-- camera model -->
     <include>
       <uri>model://kinect-plugin</uri>
-      <pose>0.0 0.0 0.15 0 0 0 0</pose>
-      <static>1</static>
+      <pose>0.0 0.0 2 0 0 0 0</pose>
+      <!--<static>1</static>-->
     </include>
     
     <!-- coke_can model -->
     <include>
       <uri>model://coke_can</uri>
-      <pose>2.0 0.0 0 0 0 0</pose>
+      <pose>2.0 0.0 2 0 0</pose>
       <static>1</static>
     </include>
 

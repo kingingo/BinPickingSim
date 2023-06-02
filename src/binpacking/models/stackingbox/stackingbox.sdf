@@ -11,7 +11,7 @@
     </joint>
     <link name ='stackingbox_link'> 
       <inertial>
-        <mass>3</mass>
+        <mass>10</mass>
         <inertia> 
           <ixx>0.00973</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) 0.00973 -->
           <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
@@ -40,11 +40,13 @@
         </geometry>
         <material><script><name>Gazebo/{color}</name></script></material>
       </visual>
+      <!--
       <sensor name='my_contact' type='contact'>
         <contact>
           <collision>box_collision</collision>
         </contact>
       </sensor>
+      -->
      </link>
   </model>
 </sdf>

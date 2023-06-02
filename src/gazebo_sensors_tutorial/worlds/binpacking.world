@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <sdf version="1.5">
-  <world name="world"> 
+  <world name="map"> 
+    <scene>
+      <shadows>false</shadows>
+    </scene>
+
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
@@ -11,7 +15,7 @@
       <uri>model://ground_plane</uri>
       <pose>0 0 0 0 0 0</pose>
     </include>
-
+    
     <!-- camera view -->
     <gui>
       <camera name="user_default">
@@ -22,8 +26,9 @@
     <!-- camera model -->
     <include>
       <uri>model://kinect-plugin</uri>
-      <pose>0.0 0.0 0.15 0 0 0 0</pose>
+      <pose>0.0 0.0 1.9 0.0 1.5707963267948966 0.0</pose>
       <static>1</static>
     </include>
+    <plugin name="gz_ray_label_plugin" filename="libgz_ray_label_plugin.so"/>
   </world>
 </sdf>

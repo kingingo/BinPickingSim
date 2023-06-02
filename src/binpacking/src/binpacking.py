@@ -21,10 +21,15 @@ import yaml
 import math
 import pickle
 import time
+from std_msgs.msg import String
+from gz_ray_label_plugin.msg import LabelPoint
+from gz_ray_label_plugin.msg import LabelPoints
 
 catkin_path = '/home/felix/catkin_ws'
 package_path = catkin_path+'/src/binpacking/'
+received_points_ray = False
 received_points = False
+world_frame_name = 'map'
 xpoint = []
 ypoint = []
 zpoint = [] 
@@ -52,11 +57,17 @@ color_codes = {
   'Yellow': "255 225 20",
   'Red': "229 0 0",
   'Orange': "249 115 6",
-  'Blue': "3 67 223"
+  'Blue': "3 67 223",
+  'Brown': "101 55 0",
+  'Pear': "203 248 95"
   }
 object_color_codes = []
 
-def spawn_xml(model_name, modelxml, px = None, py = None, pz = None, is_sdf = True, sleeptime = 1):
+def spawn_xml(model_name, 
+              modelxml, 
+              px = None, 
+              py = None, 
+              pz = None, yaw = None, roll = None, pitch = None, qx = None, qy = None, qz = None, qw = None, is_sdf = True, sleeptime = 0):
   pose = Pose()
   
   if px is not None and py is not None and pz is not None:
@@ -64,13 +75,25 @@ def spawn_xml(model_name, modelxml, px = None, py = None, pz = None, is_sdf = Tr
     pose.position.y = py
     pose.position.z = pz
 
+  if roll is not None and pitch is not None and yaw is not None:
+    qx, qy, qz, qw = euler_to_quaternion(roll, pitch, yaw)
+    pose.orientation.x = qx
+    pose.orientation.y = qy
+    pose.orientation.z = qz
+    pose.orientation.w = qw
+  elif qx is not None and qy is not None and qz is not None and qw is not None:
+    pose.orientation.x = qx
+    pose.orientation.y = qy
+    pose.orientation.z = qz
+    pose.orientation.w = qw
+
   if is_sdf:
     spawn_sdf_model(
       model_name=model_name,
       model_xml=modelxml,
       robot_namespace='/foo.world',
       initial_pose=pose,
-      reference_frame='world'
+      reference_frame='map'
     )
   else:
     spawn_urdf_model(
@@ -78,7 +101,7 @@ def spawn_xml(model_name, modelxml, px = None, py = None, pz = None, is_sdf = Tr
       model_xml=modelxml,
       robot_namespace='/foo.world',
       initial_pose=pose,
-      reference_frame='world'
+      reference_frame='map'
     )
   if sleeptime > 0:
     rospy.sleep(sleeptime)
@@ -117,7 +140,6 @@ def camera_subscribe_callback(data):
   if received_points:
     return
 
-  log("camera_subscribe_callback got data")
   camera_frame = data.header.frame_id
   """
   cloud = ros_to_pcl(data)
@@ -185,10 +207,15 @@ def camera_subscribe_callback(data):
 
     #log("x/y/z: {}/{}/{} rgb:{}/{}/{}".format(x,y,z,rgb[0], rgb[1], rgb[2]))
   received_points = True
+  log("camera_subscribe_callback got data from frame {}".format(camera_frame))
 
 def fill_color_label():
   global rgbpoint
   length = len(rgbpoint)
+
+  for i in range(len(object_color_codes)):
+    model = object_color_codes[i]
+    log("modelname:{} rgb:{}/{}/{} catId:{}".format(model['name'], model['r'],model['g'],model['b'],model['catId']))
 
   log("Start color labeling...")
   for i in range(length):
@@ -203,7 +230,7 @@ def fill_color_label():
 def get_pose(object):
   state = get_state(object, '')
 
-  return state.pose.position
+  return state.pose
 
 def set_pose(object, x, y, z):
   model_state = ModelState()
@@ -232,9 +259,21 @@ def respawn_objects(static = True):
 
   log("log object locations")
   for obj in spawned_objects:
-    pos = get_pose(obj)
-    objs.append( {'name':obj, 'x': pos.x, 'y': pos.y, 'z': pos.z} )
-    log('object {}: {}/{}/{} loaded'.format(obj, pos.x, pos.y, pos.z))
+    pose = get_pose(obj)
+    pos = pose.position
+    orientation = pose.orientation
+    objs.append( 
+      {'name':obj, 
+       'x': pos.x, 
+       'y': pos.y, 
+       'z': pos.z, 
+       'qx': orientation.x, 
+       'qy': orientation.y, 
+       'qz': orientation.x, 
+       'qw': orientation.w
+       } 
+    )
+    log('object {} loaded'.format(obj))
 
   delete_spawned_objects()
   for data in objs:
@@ -242,14 +281,31 @@ def respawn_objects(static = True):
     px = data['x']
     py = data['y']
     pz = data['z']
+    qx = data['qx']
+    qy = data['qy']
+    qz = data['qz']
+    qw = data['qw']
+
+    str_split = obj.split("_")
+    model = str_split[len(str_split)-1]
+    model = model.lower()
 
     if static:
       joint = joint_xml(obj)
 
-    xml = get_xml(obj, '', 'box', 'Blue', joint)
-    spawn_xml(obj, xml, px, py, pz, True)
+    if model == 'banana':
+      color = 'Yellow'
+    elif model == 'apple':
+      color = 'Red'
+    elif model == 'orange':
+      color = 'Orange'
+    else:
+      color = 'Blue'
+
+    xml = get_xml(obj, '/'+model+'/', model, color, joint)
+    spawn_xml(obj, xml, px=px, py= py, pz= pz, qx = qx, qy = qy, qz = qz, qw = qw, is_sdf = True)
     spawned_objects.append(obj)
-    log('object {}: {}/{}/{} respawned {}'.format(obj, px, py, pz, 'static' if static else 'not-static'))
+    log('{} respawned'.format(data))
 
 def get_index_from_point(name1, name2):
   id = 0
@@ -490,7 +546,7 @@ def track_collisions():
   #unpause_physics(EmptyRequest())
 
 def subscribe_to_camera():
-  global received_points
+  global received_points,rgbpoint
   #respawn_objects()
   clear_all_forces()
   #subscribe to camera 
@@ -498,12 +554,20 @@ def subscribe_to_camera():
   sub = rospy.Subscriber("/camera/depth/points", PointCloud2, camera_subscribe_callback)
   log("waiting for incoming points")
   while True:
-    rospy.sleep(1)
+    rospy.sleep(0.1)
     if received_points:
+
+      if len(rgbpoint) > 0:
+        rgb = float_to_rgb(rgbpoint[0])
+
+        if rgb[0] == 0 and rgb[1] == 0 and rgb[2] == 0:
+          reset_world()
+          received_points = False
+          log("RGB all black so take points again :)")
+          continue
       break
 
   sub.unregister()
-  rospy.sleep(2)
   log("done with sleeping... lets continue")
   log("Volume {}".format(len(xpoint)))
    
@@ -534,10 +598,9 @@ def reset_world():
   del worldpoints[:]
   del clabelpoint[:]
   del labelpoint[:]
-  del object_color_codes[:]
   clear_path()
 
-def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = True, with_label = True, RGB = True):
+def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = True, with_label = True, RGB = True, world_points = False):
   global xpoint, ypoint, zpoint, labelpoint, clabelpoint, worldpoints
 
   if not (format is 'ply' or format is 'txt'):
@@ -578,9 +641,15 @@ def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = T
     wr('end_header\n')
   
   for i in range(volume):
+
     x = xpoint[i]
     y = ypoint[i]
     z = zpoint[i]
+
+    if world_points:
+      x = worldpoints[i][0]
+      y = worldpoints[i][1]
+      z = worldpoints[i][2]
 
     color = rgbpoint[i]
     if type(color) is list:
@@ -723,16 +792,18 @@ def delete_spawned_objects():
   #clear list
   del spawned_objects[:]
 
-def joint_xml(model_name):
+def joint_xml(model_name, px = 0, py = 0, pz = 0, pitch = 0, roll = 0, yaw = 0):
+  qx, qy, qz, qw = euler_to_quaternion(roll, pitch, yaw)
   return """
-  <joint name='model_joint' type='fixed'>
-      <parent>world</parent>
+  <joint name='{model_name}_model_joint' type='fixed'>
+      <pose>{px} {py} {pz} {qx} {qy} {qz} {qw}</pose>
+      <parent>map</parent>
       <child>{model_name}_link</child>
     </joint>
-  """.format(model_name = model_name)
+  """.format(model_name = model_name, px = px, py = py, pz = pz, qx = qx, qy = qy, qz = qz, qw = qw)
 
 def _get_xml(model_name, color = 'Yellow', joint = False, static = False, catId = 0):
-  return get_xml(model_name, '/' + model_name + '/', model_name, color, joint, catId)
+  return get_xml(model_name, '/' + model_name + '/', model_name, color, joint=joint, static=static, catId=catId)
 
 def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static = False, catId = 0):
   global object_color_codes 
@@ -757,20 +828,20 @@ def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static
   return xml.format(model_name=model_name, color = color, joint = '' if not joint else joint, static = 'false' if not static else 'true')
 
 
-def send_world_frame(x, y, z, roll, pitch, yaw):
+def send_world_frame(x, y, z,frame_id = "ray_frame", child_frame = "map", roll = 0, pitch = 0, yaw = 0, rx = None, ry = None, rz = None, rw = None):
   rot = euler_to_quaternion(roll, pitch, yaw)
-  child_frame = "map"
 
-  rx = rot[0]
-  ry = rot[1]
-  rz = rot[2]
-  rw = rot[3]
+  if rx is None or ry is None or rz is None or rw is None:
+    rx = rot[0]
+    ry = rot[1]
+    rz = rot[2]
+    rw = rot[3]
 
   log("Translation x/y/z -> {}/{}/{} {}/{}/{}/{}".format(x,y,z, rx, ry, rz, rw))
   world_transform = TransformStamped()
   
   world_transform.header.stamp = rospy.Time.now()
-  world_transform.header.frame_id = "world"
+  world_transform.header.frame_id = frame_id
   world_transform.child_frame_id = child_frame
   world_transform.transform.translation.x = x
   world_transform.transform.translation.y = y
@@ -780,8 +851,36 @@ def send_world_frame(x, y, z, roll, pitch, yaw):
   world_transform.transform.rotation.z = rz
   world_transform.transform.rotation.w = rw
   tf_broadcaster.sendTransform(world_transform)
-  log("created world frame with {} as a child frame".format(child_frame))
+  log("created transformation between from {} to {} (parent->child)".format(frame_id, child_frame))
 
+def spawn_objects(xmls, is_sdf = True, start_id = 0):
+  global bbox_px, bbox_py, bbox_pz
+  #xmls = ['banana':xml]
+  #settings = [{'name':'banana', 'catId':2}]
+  settings = []
+  for i in range(len(xmls)):
+    xmls[i]['counter'] = 0
+    settings = settings + [i] * xmls[i]['amount']
+
+  random.shuffle(settings)
+
+  for i in settings:
+    name = xmls[i]['name']
+    catId = xmls[i]['catId']
+    xml = xmls[i]['xml']
+    id = xmls[i]['counter']
+    xmls[i]['counter']=xmls[i]['counter']+1
+
+    px = random.uniform(bbox_px[0]+0.1, bbox_px[1]-0.1)
+    py = random.uniform(bbox_py[0]+0.1, bbox_py[1]-0.1)
+    pz = random.uniform(bbox_pz[0], bbox_pz[1])
+
+    model_name = '{}_{}_{}'.format(catId,start_id+id+2,name)
+    spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
+    spawned_objects.append(model_name)
+
+
+'''
 def spawn_objects(amount = 6, name = 'box', path = '', is_sdf = True, default_color = '', start_id = 0, catId = 0):
   #<pose> x y z roll pitch yaw</pose>
   global bbox_px, bbox_py, bbox_pz
@@ -802,6 +901,7 @@ def spawn_objects(amount = 6, name = 'box', path = '', is_sdf = True, default_co
     spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
       
     spawned_objects.append(model_name)
+'''
 
 def calc_distance(x = 0,y = 0,z = 1.8, bx = 0, by = 0, bz = 0):
   camera_pos = np.array([x,y,z])
@@ -845,6 +945,8 @@ def calc_camera_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
   roll = np.arctan2(camera_to_target[0], camera_to_target[1])
   log("yaw:{}, pitch:{} und roll:{}".format(yaw,pitch, roll))
 
+  q = euler_to_quaternion(roll, pitch, yaw)
+  log("quanternion x/y/z/w: {}/{}/{}/{}".format(q[0],q[1],q[2],q[3]))
   #yaw = np.arctan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
   #pitch = np.arctan2(-rotation_matrix[2, 0], np.sqrt(rotation_matrix[2, 1]**2 + rotation_matrix[2, 2]**2))
   #roll = np.arctan2(rotation_matrix[2, 1], rotation_matrix[2, 2])
@@ -941,9 +1043,8 @@ def sample_down_pointcloud():
 
 #Transfrom camera point to world point
 def transform_cp_to_wp(x, y, z):
-  global camera_frame, listener
-  world_name = 'world'
-
+  global camera_frame, listener, world_frame_name
+  world_name = world_frame_name
   p1 = PoseStamped()
   p1.header.stamp = rospy.Time.now()
   p1.header.frame_id = camera_frame
@@ -951,9 +1052,9 @@ def transform_cp_to_wp(x, y, z):
   p1.pose.position.y = y
   p1.pose.position.z = z
   p1.pose.orientation.x = 0.0
-  p1.pose.orientation.y = 0.0
+  p1.pose.orientation.y =  0.0
   p1.pose.orientation.z = 0.0
-  p1.pose.orientation.w = 1.0
+  p1.pose.orientation.w =  1.0
   p2 = listener.transformPose(world_name, p1)
 
   return [p2.pose.position.x, p2.pose.position.y, p2.pose.position.z]
@@ -963,18 +1064,41 @@ def transform_points():
   worldpoints = []
 
   volume = len(xpoint)
-  log("Transform points from '{}' frame to 'world' frame, volume = {}".format(camera_frame,volume))
+  log("Transform points from '{}' frame to 'map' frame, volume = {}".format(camera_frame,volume))
+  nott = 0
   for i in range(volume):
       x = xpoint[i]
       y = ypoint[i]
       z = zpoint[i]
 
-      p = transform_cp_to_wp(x,y,z)
-      _x = p[0]
-      _y = p[1] 
-      _z = p[2]
+      _x, _y, _z = transform_cp_to_wp(x,y,z)
+
+      if _x == x and _y == y and _z == z:
+        nott+=1
       worldpoints.append([_x, _y, _z])
+
+  if nott > 0:
+    log("not transformed {} {}".format(nott, volume))
+
   log("transform done: points={}, worldpoints={}".format(len(xpoint), len(worldpoints)))
+
+  '''
+  delete_spawned_objects()
+  for i in range(volume):
+      x = worldpoints[i][0]
+      y = worldpoints[i][1]
+      z = worldpoints[i][2]
+      xml = _get_xml('box', 'Red', catId=0)
+      spawn_xml('{}_box'.format(i), px=x, py=y, pz=z, modelxml=xml)
+    
+  rospy.spin()
+  '''
+      
+
+
+def rospy_sleep(seconds, nseconds = 0):
+  duration = rospy.Duration(seconds,nseconds)
+  rospy.sleep(duration)
 
 def reset_simulation():
     rospy.wait_for_service('/gazebo/reset_simulation')
@@ -983,6 +1107,114 @@ def reset_simulation():
         reset_simulation_service()
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: " + str(e))
+
+def kill_sim():
+  proc = subprocess.Popen(['python3', 'binpacking.py'], shell=False)
+  rospy.sleep(0.2)
+  proc.send_signal(signal.SIGINT)
+  os.system('killall -9 gzserver gzclient screen')
+  proc.wait()
+
+def callback_ray_labeled_points(data):
+  global labelpoint, received_points_ray,worldpoints
+  if received_points_ray:
+    return
+  log("Got labeled data: {}".format(len(data.points)))
+
+  count_map = [0] * len(object_color_codes)
+  kinect_plugin = 0
+  none = 0
+  ground_plane = 0
+  length = len(data.points)
+  for i in range(length):
+    point = data.points[i]
+    entity = point.entityName
+    index = point.index
+
+    #log("{}/{}/{} dist:{} entity: {}".format(point.x, point.y, point.z, point.dist, entity))
+    if 'None' in entity:
+      none+=1
+    elif 'ground_plane' in entity:
+      ground_plane+=1
+    elif 'kinect-plugin' in entity:
+      kinect_plugin+=1
+    elif entity != 'None' and '_' in entity:
+      try:
+        id = int(entity.split("_")[0])
+        count_map[id] = count_map[id] + 1
+
+        '''
+        x = worldpoints[index][0]
+        y = worldpoints[index][1]
+        z = worldpoints[index][2]
+
+        if x is not point.x or y is not point.y or z is not point.z:
+          log("{} = {} world x/y/z {}/{}/{}, point {}/{}/{}".format(i,index,x,y,z, point.x,point.y,point.z))
+        '''
+
+        labelpoint[index] = id
+      except:
+        labelpoint[index] = 0
+        count_map[0] = count_map[0] + 1
+
+  for i in range(len(count_map)):
+    log("catId: {} found {}".format(i, count_map[i]))
+  log("kinect_plugin found {}".format(kinect_plugin))
+  log("none found {}".format(none))
+  log("ground_plane found {}".format(ground_plane))
+  received_points_ray = True
+
+def label_points_by_ray():
+  global worldpoints, received_points_ray, xpoint, ypoint, zpoint
+  received_points_ray = False
+
+  pos = calc_camera_location()
+  camera_set_pose(pos['x'], pos['y'], 4, pos['roll'], pos['pitch'], pos['yaw'])
+
+  pub = rospy.Publisher('/ray/points', LabelPoints, queue_size = 10)
+  sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
+  cloud = LabelPoints()
+  length = len(worldpoints)
+  for i in range(length):
+    point = LabelPoint()
+    point.x = worldpoints[i][0]
+    point.y = worldpoints[i][1]
+    point.z = worldpoints[i][2]
+    point.index = i
+
+    cloud.points.append(point)
+
+  rospy.sleep(1)
+  pub.publish(cloud)
+  log("waiting for labeled points")
+  while not rospy.is_shutdown():
+    rospy.sleep(1)
+    if received_points_ray:
+      log("got")
+      break
+
+  log("labeling points done :)")
+  sub.unregister()
+  pub.unregister()
+  camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+
+def compare_labels():
+  global clabelpoint, labelpoint,world_frame_name
+
+  length = len(labelpoint)
+  clength = len(clabelpoint)
+  count_map = [0] * len(object_color_codes)
+  for i in range(length):
+    i = labelpoint[i]
+    ci = clabelpoint[i]
+
+    if i == ci:
+      count_map[i] += 1
+
+  log("clabelpoint vol: {}".format(clength))
+  log("labelpoint vol: {}".format(length))
+  for i in range(len(count_map)):
+    log("catId: {} found euqal {}".format(i, count_map[i]))
 
 if __name__ == '__main__':
   global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state
@@ -1007,11 +1239,12 @@ if __name__ == '__main__':
 
   log("wait for services...")
   rospy.wait_for_service('/gazebo/spawn_sdf_model')
-  rospy.wait_for_service('gazebo/spawn_urdf_model')
+  rospy.wait_for_service('/gazebo/spawn_urdf_model')
   rospy.wait_for_service("/gazebo/delete_model")
   rospy.wait_for_service('/gazebo/set_model_state')
   rospy.wait_for_service('/gazebo/get_model_state')
-  rospy.wait_for_service('gazebo/clear_body_wrenches')
+  rospy.wait_for_service('/gazebo/clear_body_wrenches')
+
   #rospy.wait_for_service('/gazebo/reset_world')
 
   delete_model = rospy.ServiceProxy("/gazebo/delete_model", DeleteModel)
@@ -1023,17 +1256,35 @@ if __name__ == '__main__':
   unpause_physics = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
   clear_body_wrench = rospy.ServiceProxy('gazebo/clear_body_wrenches', BodyRequest)
   #link_states = rospy.ServiceProxy('/gazebo/link_states', Empty)
+  '''
+  log("SLEEP 2 SECS")
+  rospy.sleep(2)
 
-  rospy.sleep(1)
-  pos = calc_camera_location()
-  camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+  pub = rospy.Publisher('/ray/points', LabelPoints, queue_size = 10)
+  sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
+  cloud = LabelPoints()
+  for j in range(80000):
+    point = LabelPoint()
+    point.x = random.randint(-10,10)
+    point.y = random.randint(-10,10)
+    point.z = 0.2
+
+    cloud.points.append(point)
+
+  pub.publish(cloud)
+
+
+  log("PUBLISH LABEL CLOUD")
+
+  rospy.spin()
+  '''
+  #set camera on right position
+  #pos = calc_camera_location()
+  #camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
   #spawn stackingbox
   xml = _get_xml('stackingbox', 'Blue', catId=1)
-  spawn_xml('stackingbox', xml)
-  #set camera on right position
-  rospy.sleep(1)
-
+  spawn_xml('1_stackingbox', xml)
   #init transform function from cp to wp
   tf_buffer = tf2_ros.Buffer()
   tf_listener = tf2_ros.TransformListener(tf_buffer)
@@ -1042,9 +1293,8 @@ if __name__ == '__main__':
   #pcl_ros::transformPointCloud(destination_frame,from_cloud,to_cloud,TransformListener)
   #Add world frame
   tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
-  rospy.sleep(3)
-  
-  send_world_frame(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+  world_frame_name = 'ray_frame'
+  send_world_frame(0, 0, 0, rx=-0.499999999463, ry=0.499999999463,rz=-0.499976836603, rw=0.500023163397)
 
   if type(jump_to_checkpoint) == list:
     log("load object for checkpoint")
@@ -1117,33 +1367,53 @@ if __name__ == '__main__':
   
   """
 
-  rospy.sleep(1)
-  for i in range(1000):
-    start_time = time.time()
-    #spawn objects in box
-    spawn_objects(5 + random.randint(8,20), 'banana', '/banana/', True, 'Yellow', catId=2)
-    spawn_objects(5 + random.randint(8,20), 'apple', '/apple/', True, 'Red', catId=3)
-    spawn_objects(5 + random.randint(8,20), 'orange', '/orange/', True, 'Orange', catId=4)
-    sleeptime = 30
-    log("wait {} seconds".format(sleeptime))
-    rospy.sleep(sleeptime)
-    clear_all_forces()
-    #subscribe to camera and gather pointsg
-    subscribe_to_camera()
-    write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
-    filter_points_by_colours()
-    transform_points()
-    #filter_points(bbox_px[0]+0.02,bbox_px[1]+0.2, bbox_py[0]-0.2, bbox_py[1]+0.2)
-    save_checkpoint()
-    write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False) 
-    #sample_down_pointcloud()
-    convert_rgb()
-    fill_color_label()
-    #track_collisions()
-    #storage training data
-    write_pointcloud()
-    #delete all spawned objects
-    delete_spawned_objects()
-    diff_time = time.time() - start_time
-    log("the round took {}".format(td(seconds = diff_time)))
-    reset_simulation()
+  banana_xml = get_xml('banana', '/banana/', 'banana', 'Yellow', catId=2)
+  apple_xml = get_xml('apple', '/apple/', 'apple', 'Red', catId=3)
+  orange_xml = get_xml('orange', '/orange/', 'orange', 'Orange', catId=4)
+  pear_xml = get_xml('pear', '/pear/', 'pear', 'Pear', catId=5)
+  xmls = [
+    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':1},
+    #{'name':'apple','catId':3, 'xml':apple_xml, 'amount':1},
+    #{'name':'orange','catId':4, 'xml':orange_xml, 'amount':1},
+    #{'name':'pear','catId':5, 'xml':pear_xml, 'amount':1}
+  ]
+  '''
+  xmls = [
+    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':5 + random.randint(8,22)},
+    {'name':'apple','catId':3, 'xml':apple_xml, 'amount':5 + random.randint(8,22)},
+    {'name':'orange','catId':4, 'xml':orange_xml, 'amount':5 + random.randint(8,22)},
+    {'name':'pear','catId':5, 'xml':pear_xml, 'amount':5 + random.randint(8,22)}
+  ]
+  '''
+
+  start_time = time.time()
+  #spawn objects in box
+  spawn_objects(xmls)
+  sleeptime = 3
+  log("wait {} seconds".format(sleeptime))
+  rospy_sleep(sleeptime)
+  log("done sleeping lets start")
+  clear_all_forces()
+  #respawn_objects()
+  #subscribe to camera and gather pointsg
+  subscribe_to_camera()
+  write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
+  filter_points_by_colours()
+  transform_points()
+  #filter_points(bbox_px[0]+0.02,bbox_px[1]+0.2, bbox_py[0]-0.2, bbox_py[1]+0.2)
+  save_checkpoint()
+  write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False, world_points=True) 
+  write_pointcloud(reset = False, prefix = '2_', colored_file= False, with_label= False) 
+  #sample_down_pointcloud()
+  convert_rgb()
+  label_points_by_ray()
+  fill_color_label()
+  compare_labels()
+  #track_collisions()
+  #storage training data
+  write_pointcloud()
+  #delete all spawned objects
+  delete_spawned_objects()
+  diff_time = time.time() - start_time
+  log("the round took {}".format(td(seconds = diff_time)))
+  kill_sim()

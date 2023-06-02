@@ -1680,6 +1680,188 @@ aruco_frames_detection/fast:
 .PHONY : aruco_frames_detection/fast
 
 #=============================================================================
+# Target rules for targets named gz_ray_label_plugin_generate_messages
+
+# Build rule for target.
+gz_ray_label_plugin_generate_messages: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_generate_messages
+.PHONY : gz_ray_label_plugin_generate_messages
+
+# fast build rule for target.
+gz_ray_label_plugin_generate_messages/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages.dir/build
+.PHONY : gz_ray_label_plugin_generate_messages/fast
+
+#=============================================================================
+# Target rules for targets named _gz_ray_label_plugin_generate_messages_check_deps_LabelPoints
+
+# Build rule for target.
+_gz_ray_label_plugin_generate_messages_check_deps_LabelPoints: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _gz_ray_label_plugin_generate_messages_check_deps_LabelPoints
+.PHONY : _gz_ray_label_plugin_generate_messages_check_deps_LabelPoints
+
+# fast build rule for target.
+_gz_ray_label_plugin_generate_messages_check_deps_LabelPoints/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/_gz_ray_label_plugin_generate_messages_check_deps_LabelPoints.dir/build.make gz_ray_label_plugin/CMakeFiles/_gz_ray_label_plugin_generate_messages_check_deps_LabelPoints.dir/build
+.PHONY : _gz_ray_label_plugin_generate_messages_check_deps_LabelPoints/fast
+
+#=============================================================================
+# Target rules for targets named _gz_ray_label_plugin_generate_messages_check_deps_LabelPoint
+
+# Build rule for target.
+_gz_ray_label_plugin_generate_messages_check_deps_LabelPoint: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _gz_ray_label_plugin_generate_messages_check_deps_LabelPoint
+.PHONY : _gz_ray_label_plugin_generate_messages_check_deps_LabelPoint
+
+# fast build rule for target.
+_gz_ray_label_plugin_generate_messages_check_deps_LabelPoint/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/_gz_ray_label_plugin_generate_messages_check_deps_LabelPoint.dir/build.make gz_ray_label_plugin/CMakeFiles/_gz_ray_label_plugin_generate_messages_check_deps_LabelPoint.dir/build
+.PHONY : _gz_ray_label_plugin_generate_messages_check_deps_LabelPoint/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_generate_messages_cpp
+
+# Build rule for target.
+gz_ray_label_plugin_generate_messages_cpp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_generate_messages_cpp
+.PHONY : gz_ray_label_plugin_generate_messages_cpp
+
+# fast build rule for target.
+gz_ray_label_plugin_generate_messages_cpp/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_cpp.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_cpp.dir/build
+.PHONY : gz_ray_label_plugin_generate_messages_cpp/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_gencpp
+
+# Build rule for target.
+gz_ray_label_plugin_gencpp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_gencpp
+.PHONY : gz_ray_label_plugin_gencpp
+
+# fast build rule for target.
+gz_ray_label_plugin_gencpp/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_gencpp.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_gencpp.dir/build
+.PHONY : gz_ray_label_plugin_gencpp/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_generate_messages_eus
+
+# Build rule for target.
+gz_ray_label_plugin_generate_messages_eus: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_generate_messages_eus
+.PHONY : gz_ray_label_plugin_generate_messages_eus
+
+# fast build rule for target.
+gz_ray_label_plugin_generate_messages_eus/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_eus.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_eus.dir/build
+.PHONY : gz_ray_label_plugin_generate_messages_eus/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_geneus
+
+# Build rule for target.
+gz_ray_label_plugin_geneus: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_geneus
+.PHONY : gz_ray_label_plugin_geneus
+
+# fast build rule for target.
+gz_ray_label_plugin_geneus/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_geneus.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_geneus.dir/build
+.PHONY : gz_ray_label_plugin_geneus/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_generate_messages_lisp
+
+# Build rule for target.
+gz_ray_label_plugin_generate_messages_lisp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_generate_messages_lisp
+.PHONY : gz_ray_label_plugin_generate_messages_lisp
+
+# fast build rule for target.
+gz_ray_label_plugin_generate_messages_lisp/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_lisp.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_lisp.dir/build
+.PHONY : gz_ray_label_plugin_generate_messages_lisp/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_genlisp
+
+# Build rule for target.
+gz_ray_label_plugin_genlisp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_genlisp
+.PHONY : gz_ray_label_plugin_genlisp
+
+# fast build rule for target.
+gz_ray_label_plugin_genlisp/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_genlisp.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_genlisp.dir/build
+.PHONY : gz_ray_label_plugin_genlisp/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_generate_messages_nodejs
+
+# Build rule for target.
+gz_ray_label_plugin_generate_messages_nodejs: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_generate_messages_nodejs
+.PHONY : gz_ray_label_plugin_generate_messages_nodejs
+
+# fast build rule for target.
+gz_ray_label_plugin_generate_messages_nodejs/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_nodejs.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_nodejs.dir/build
+.PHONY : gz_ray_label_plugin_generate_messages_nodejs/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_gennodejs
+
+# Build rule for target.
+gz_ray_label_plugin_gennodejs: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_gennodejs
+.PHONY : gz_ray_label_plugin_gennodejs
+
+# fast build rule for target.
+gz_ray_label_plugin_gennodejs/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_gennodejs.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_gennodejs.dir/build
+.PHONY : gz_ray_label_plugin_gennodejs/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_generate_messages_py
+
+# Build rule for target.
+gz_ray_label_plugin_generate_messages_py: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_generate_messages_py
+.PHONY : gz_ray_label_plugin_generate_messages_py
+
+# fast build rule for target.
+gz_ray_label_plugin_generate_messages_py/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_py.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_generate_messages_py.dir/build
+.PHONY : gz_ray_label_plugin_generate_messages_py/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin_genpy
+
+# Build rule for target.
+gz_ray_label_plugin_genpy: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin_genpy
+.PHONY : gz_ray_label_plugin_genpy
+
+# fast build rule for target.
+gz_ray_label_plugin_genpy/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_genpy.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin_genpy.dir/build
+.PHONY : gz_ray_label_plugin_genpy/fast
+
+#=============================================================================
+# Target rules for targets named gz_ray_label_plugin
+
+# Build rule for target.
+gz_ray_label_plugin: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gz_ray_label_plugin
+.PHONY : gz_ray_label_plugin
+
+# fast build rule for target.
+gz_ray_label_plugin/fast:
+	$(MAKE) $(MAKESILENT) -f gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin.dir/build.make gz_ray_label_plugin/CMakeFiles/gz_ray_label_plugin.dir/build
+.PHONY : gz_ray_label_plugin/fast
+
+#=============================================================================
 # Target rules for targets named aruco_broadcaster
 
 # Build rule for target.
@@ -2269,6 +2451,8 @@ help:
 	@echo "... _catkin_empty_exported_target"
 	@echo "... _contact_republisher_generate_messages_check_deps_contact_msg"
 	@echo "... _contact_republisher_generate_messages_check_deps_contacts_msg"
+	@echo "... _gz_ray_label_plugin_generate_messages_check_deps_LabelPoint"
+	@echo "... _gz_ray_label_plugin_generate_messages_check_deps_LabelPoints"
 	@echo "... actionlib_generate_messages_cpp"
 	@echo "... actionlib_generate_messages_eus"
 	@echo "... actionlib_generate_messages_lisp"
@@ -2344,6 +2528,17 @@ help:
 	@echo "... geometry_msgs_generate_messages_lisp"
 	@echo "... geometry_msgs_generate_messages_nodejs"
 	@echo "... geometry_msgs_generate_messages_py"
+	@echo "... gz_ray_label_plugin_gencpp"
+	@echo "... gz_ray_label_plugin_generate_messages"
+	@echo "... gz_ray_label_plugin_generate_messages_cpp"
+	@echo "... gz_ray_label_plugin_generate_messages_eus"
+	@echo "... gz_ray_label_plugin_generate_messages_lisp"
+	@echo "... gz_ray_label_plugin_generate_messages_nodejs"
+	@echo "... gz_ray_label_plugin_generate_messages_py"
+	@echo "... gz_ray_label_plugin_geneus"
+	@echo "... gz_ray_label_plugin_genlisp"
+	@echo "... gz_ray_label_plugin_gennodejs"
+	@echo "... gz_ray_label_plugin_genpy"
 	@echo "... map_msgs_generate_messages_cpp"
 	@echo "... map_msgs_generate_messages_eus"
 	@echo "... map_msgs_generate_messages_lisp"
@@ -2422,6 +2617,7 @@ help:
 	@echo "... gmock_main"
 	@echo "... gtest"
 	@echo "... gtest_main"
+	@echo "... gz_ray_label_plugin"
 	@echo "... marker_publisher"
 	@echo "... single"
 .PHONY : help

@@ -1,0 +1,8 @@
+prefix=/home/felix/catkin_ws/devel
+
+Name: gz_ray_label_plugin
+Description: Description of gz_ray_label_plugin
+Version: 0.0.0
+Cflags: -I/home/felix/catkin_ws/devel/include
+Libs: -L${prefix}/lib 
+Requires: roscpp gazebo_ros
