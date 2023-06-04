@@ -26,22 +26,6 @@
 (cl:defmethod points-val ((m <LabelPoints>))
   (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader gz_ray_label_plugin-msg:points-val is deprecated.  Use gz_ray_label_plugin-msg:points instead.")
   (points m))
-(cl:defmethod roslisp-msg-protocol:symbol-codes ((msg-type (cl:eql '<LabelPoints>)))
-    "Constants for message type '<LabelPoints>"
-  '((:SCALING . 0.3)
-    (:START_Z . 0.5)
-    (:END_Z . 0.0)
-    (:RATE . 800)
-    (:SHOWMARKER . 0))
-)
-(cl:defmethod roslisp-msg-protocol:symbol-codes ((msg-type (cl:eql 'LabelPoints)))
-    "Constants for message type 'LabelPoints"
-  '((:SCALING . 0.3)
-    (:START_Z . 0.5)
-    (:END_Z . 0.0)
-    (:RATE . 800)
-    (:SHOWMARKER . 0))
-)
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <LabelPoints>) ostream)
   "Serializes a message object of type '<LabelPoints>"
   (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'points))))
@@ -74,16 +58,16 @@
   "gz_ray_label_plugin/LabelPoints")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<LabelPoints>)))
   "Returns md5sum for a message object of type '<LabelPoints>"
-  "12626dfe7ece5ce24b5405f8223e9ab8")
+  "9238b1dd4884b2c9c5ea319c5eeba180")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'LabelPoints)))
   "Returns md5sum for a message object of type 'LabelPoints"
-  "12626dfe7ece5ce24b5405f8223e9ab8")
+  "9238b1dd4884b2c9c5ea319c5eeba180")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<LabelPoints>)))
   "Returns full string definition for message of type '<LabelPoints>"
-  (cl:format cl:nil "LabelPoint[] points~%float32 scaling=0.3~%float32 start_z=0.5~%float32 end_z=0.0~%int32 rate=800~%int8 showMarker=0~%================================================================================~%MSG: gz_ray_label_plugin/LabelPoint~%float32 x~%float32 y~%float32 z~%int32 index~%float64 dist~%string entityName~%~%"))
+  (cl:format cl:nil "LabelPoint[] points~%================================================================================~%MSG: gz_ray_label_plugin/LabelPoint~%float32 x~%float32 y~%float32 z~%int32 index~%float64 dist~%string entityName~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'LabelPoints)))
   "Returns full string definition for message of type 'LabelPoints"
-  (cl:format cl:nil "LabelPoint[] points~%float32 scaling=0.3~%float32 start_z=0.5~%float32 end_z=0.0~%int32 rate=800~%int8 showMarker=0~%================================================================================~%MSG: gz_ray_label_plugin/LabelPoint~%float32 x~%float32 y~%float32 z~%int32 index~%float64 dist~%string entityName~%~%"))
+  (cl:format cl:nil "LabelPoint[] points~%================================================================================~%MSG: gz_ray_label_plugin/LabelPoint~%float32 x~%float32 y~%float32 z~%int32 index~%float64 dist~%string entityName~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <LabelPoints>))
   (cl:+ 0
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'points) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))

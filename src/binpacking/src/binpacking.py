@@ -591,7 +591,6 @@ def track_collisions():
 
 def subscribe_to_camera():
   global received_points,rgbpoint
-  #respawn_objects()
   clear_all_forces()
   #subscribe to camera 
   received_points = False
@@ -921,7 +920,6 @@ def spawn_objects(xmls, is_sdf = True, start_id = 0):
 
     model_name = '{}_{}_{}'.format(catId,start_id+id+2,name)
     spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
-    spawned_objects.append(model_name)
 
 def calc_distance(x = 0,y = 0,z = 1.8, bx = 0, by = 0, bz = 0):
   camera_pos = np.array([x,y,z])
@@ -1052,7 +1050,7 @@ def kill_sim():
   os.system("ps -ef | grep 'ros' | grep -v grep | awk '{print $2}' | xargs -r kill -9")
 
 def callback_ray_labeled_points(data):
-  global labelpoint, received_points_ray,worldpoints
+  global labelpoint, received_points_ray, worldpoints
   if received_points_ray:
     return
   log("Got labeled data: {}".format(len(data.points)))
@@ -1067,7 +1065,6 @@ def callback_ray_labeled_points(data):
     entity = point.entityName
     index = point.index
 
-    #log("{}/{}/{} dist:{} entity: {}".format(point.x, point.y, point.z, point.dist, entity))
     if 'None' in entity:
       none+=1
     elif 'ground_plane' in entity:
@@ -1094,9 +1091,6 @@ def label_points_by_ray():
   global worldpoints, received_points_ray, xpoint, ypoint, zpoint
   received_points_ray = False
 
-  #pos = calc_camera_location()
-  #camera_set_pose(pos['x'], pos['y'], 4, pos['roll'], pos['pitch'], pos['yaw'])
-
   pub = rospy.Publisher('/ray/points', LabelPoints, queue_size = 10)
   sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
   cloud = LabelPoints()
@@ -1107,7 +1101,6 @@ def label_points_by_ray():
     point.y = worldpoints[i][1]
     point.z = worldpoints[i][2]
     point.index = i
-
     cloud.points.append(point)
 
   rospy.sleep(1)
@@ -1122,7 +1115,6 @@ def label_points_by_ray():
   log("labeling points done :)")
   sub.unregister()
   pub.unregister()
-  #camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
 def compare_labels():
   global clabelpoint, labelpoint,world_frame_name
@@ -1247,48 +1239,42 @@ if __name__ == '__main__':
     {'name':'pear','catId':5, 'xml':pear_xml, 'amount':3}
   ]
   '''
-
-  xmls = [
-    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':5 + random.randint(5,15)},
-    {'name':'apple','catId':3, 'xml':apple_xml, 'amount':5 + random.randint(5,15)},
-    {'name':'orange','catId':4, 'xml':orange_xml, 'amount':5 + random.randint(5,15)},
-    {'name':'pear','catId':5, 'xml':pear_xml, 'amount':5 + random.randint(5,15)},
-    {'name':'plum','catId':6, 'xml':plum_xml, 'amount':5 + random.randint(5,15)}
-  ]
-  start_time = time.time()
-  #spawn objects in box
-  
-  spawn_objects(xmls)
-  
-  #spawn_xml('3_apple', apple_xml, px = 0, py = 0, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
-  #spawn_xml('2_banana', banana_xml, px = 0.2, py = 0.1, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
-  log("wait {} seconds".format(sleeptime))
-  rospy_sleep(sleeptime)
-  log("done sleeping lets start")
-  freeze()
-  
-  #clear_all_forces()
-  #respawn_objects()
-  #subscribe to camera and gather pointsg
-  subscribe_to_camera()
-  write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
-  filter_points_by_colours()
-  transform_points()
-  #filter_points(bbox_px[0]+0.02,bbox_px[1]+0.2, bbox_py[0]-0.2, bbox_py[1]+0.2)
-  save_checkpoint()
-  write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False, world_points=True) 
-  write_pointcloud(reset = False, prefix = '2_', colored_file= False, with_label= False) 
-  #sample_down_pointcloud()
-  convert_rgb()
-  label_points_by_ray()
-  fill_color_label()
-  compare_labels()
-  #track_collisions()
-  #storage training data
-  write_pointcloud()
-  #delete all spawned objects
-  unfreeze()
-  #delete_spawned_objects()
-  diff_time = time.time() - start_time
-  log("the round took {}".format(td(seconds = diff_time)))
-  kill_sim()
+  for i in range(1000):
+    start_time = time.time()
+    xmls = [
+      {'name':'banana','catId':2, 'xml':banana_xml, 'amount':5 + random.randint(5,15)},
+      {'name':'apple','catId':3, 'xml':apple_xml, 'amount':5 + random.randint(5,15)},
+      {'name':'orange','catId':4, 'xml':orange_xml, 'amount':5 + random.randint(5,15)},
+      {'name':'pear','catId':5, 'xml':pear_xml, 'amount':5 + random.randint(5,15)},
+      {'name':'plum','catId':6, 'xml':plum_xml, 'amount':5 + random.randint(5,15)}
+    ]
+    #spawn objects in box
+    spawn_objects(xmls)
+    #spawn_xml('3_apple', apple_xml, px = 0, py = 0, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
+    #spawn_xml('2_banana', banana_xml, px = 0.2, py = 0.1, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
+    log("wait {} seconds".format(sleeptime))
+    rospy_sleep(sleeptime)
+    log("done sleeping lets start")
+    freeze()
+    #subscribe to camera and gather pointsg
+    subscribe_to_camera()
+    write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
+    filter_points_by_colours()
+    transform_points()
+    #filter_points(bbox_px[0]+0.02,bbox_px[1]+0.2, bbox_py[0]-0.2, bbox_py[1]+0.2)
+    save_checkpoint()
+    write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False, world_points=True) 
+    write_pointcloud(reset = False, prefix = '2_', colored_file= False, with_label= False) 
+    #sample_down_pointcloud()
+    convert_rgb()
+    label_points_by_ray()
+    fill_color_label()
+    compare_labels()
+    #storage training data
+    write_pointcloud()
+    unfreeze()
+    rospy.sleep(0.5)
+    delete_spawned_objects()
+    diff_time = time.time() - start_time
+    log("the round took {}".format(td(seconds = diff_time)))
+    #kill_sim()

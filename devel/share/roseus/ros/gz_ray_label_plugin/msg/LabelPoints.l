@@ -12,21 +12,6 @@
 ;;//! \htmlinclude LabelPoints.msg.html
 
 
-(intern "*SCALING*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(shadow '*SCALING* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(defconstant gz_ray_label_plugin::LabelPoints::*SCALING* 0.3)
-(intern "*START_Z*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(shadow '*START_Z* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(defconstant gz_ray_label_plugin::LabelPoints::*START_Z* 0.5)
-(intern "*END_Z*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(shadow '*END_Z* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(defconstant gz_ray_label_plugin::LabelPoints::*END_Z* 0.0)
-(intern "*RATE*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(shadow '*RATE* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(defconstant gz_ray_label_plugin::LabelPoints::*RATE* 800)
-(intern "*SHOWMARKER*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(shadow '*SHOWMARKER* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(defconstant gz_ray_label_plugin::LabelPoints::*SHOWMARKER* 0)
 (defclass gz_ray_label_plugin::LabelPoints
   :super ros::object
   :slots (_points ))
@@ -76,15 +61,10 @@
    self)
   )
 
-(setf (get gz_ray_label_plugin::LabelPoints :md5sum-) "12626dfe7ece5ce24b5405f8223e9ab8")
+(setf (get gz_ray_label_plugin::LabelPoints :md5sum-) "9238b1dd4884b2c9c5ea319c5eeba180")
 (setf (get gz_ray_label_plugin::LabelPoints :datatype-) "gz_ray_label_plugin/LabelPoints")
 (setf (get gz_ray_label_plugin::LabelPoints :definition-)
       "LabelPoint[] points
-float32 scaling=0.3
-float32 start_z=0.5
-float32 end_z=0.0
-int32 rate=800
-int8 showMarker=0
 ================================================================================
 MSG: gz_ray_label_plugin/LabelPoint
 float32 x
@@ -97,6 +77,6 @@ string entityName
 
 
 
-(provide :gz_ray_label_plugin/LabelPoints "12626dfe7ece5ce24b5405f8223e9ab8")
+(provide :gz_ray_label_plugin/LabelPoints "9238b1dd4884b2c9c5ea319c5eeba180")
 
 

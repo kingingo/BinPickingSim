@@ -39,31 +39,7 @@ struct LabelPoints_
 
 
 
-// reducing the odds to have name collisions with Windows.h 
-#if defined(_WIN32) && defined(scaling)
-  #undef scaling
-#endif
-#if defined(_WIN32) && defined(start_z)
-  #undef start_z
-#endif
-#if defined(_WIN32) && defined(end_z)
-  #undef end_z
-#endif
-#if defined(_WIN32) && defined(rate)
-  #undef rate
-#endif
-#if defined(_WIN32) && defined(showMarker)
-  #undef showMarker
-#endif
 
-  enum {
-    rate = 800,
-    showMarker = 0,
-  };
-
-  static const float scaling;
-  static const float start_z;
-  static const float end_z;
 
   typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> > Ptr;
   typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> const> ConstPtr;
@@ -76,37 +52,6 @@ typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints > LabelPointsPtr;
 typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints const> LabelPointsConstPtr;
 
 // constants requiring out of line definition
-
-   
-   template<typename ContainerAllocator> const float
-      LabelPoints_<ContainerAllocator>::scaling =
-        
-          0.3
-        
-        ;
-   
-
-   
-   template<typename ContainerAllocator> const float
-      LabelPoints_<ContainerAllocator>::start_z =
-        
-          0.5
-        
-        ;
-   
-
-   
-   template<typename ContainerAllocator> const float
-      LabelPoints_<ContainerAllocator>::end_z =
-        
-          0.0
-        
-        ;
-   
-
-   
-
-   
 
 
 
@@ -178,12 +123,12 @@ struct MD5Sum< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "12626dfe7ece5ce24b5405f8223e9ab8";
+    return "9238b1dd4884b2c9c5ea319c5eeba180";
   }
 
   static const char* value(const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x12626dfe7ece5ce2ULL;
-  static const uint64_t static_value2 = 0x4b5405f8223e9ab8ULL;
+  static const uint64_t static_value1 = 0x9238b1dd4884b2c9ULL;
+  static const uint64_t static_value2 = 0xc5ea319c5eeba180ULL;
 };
 
 template<class ContainerAllocator>
@@ -203,11 +148,6 @@ struct Definition< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
   static const char* value()
   {
     return "LabelPoint[] points\n"
-"float32 scaling=0.3\n"
-"float32 start_z=0.5\n"
-"float32 end_z=0.0\n"
-"int32 rate=800\n"
-"int8 showMarker=0\n"
 "================================================================================\n"
 "MSG: gz_ray_label_plugin/LabelPoint\n"
 "float32 x\n"

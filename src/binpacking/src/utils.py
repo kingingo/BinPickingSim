@@ -2,7 +2,7 @@
 import struct
 import rospy
 import numpy as np
-import open3d as o3d
+#import open3d as o3d
 from geometry_msgs.msg import PoseStamped
 import math
 from colorama import Fore
@@ -103,4 +103,3 @@ def euler_to_quaternion(roll, pitch, yaw):
 def log(msg):
   now = dt.now()
   print(Fore.MAGENTA + "["+now.strftime("%H:%M:%S")+"] " + msg + Fore.WHITE)
-  #print(Fore.MAGENTA + "["+now.strftime("%H:%M:%S")+"] " + msg + Fore.WHITE)

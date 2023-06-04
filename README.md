@@ -10,3 +10,13 @@ start with
 ````
 roslaunch gazebo_sensors_tutorial binpacking.launch
 ````
+
+auto restart with crontab
+
+````
+tty > /dev/pts/0
+````
+
+````
+/path/catkin_ws/run.sh > /dev/pts/0
+````
