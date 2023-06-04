@@ -19,4 +19,5 @@
 (ros::load-ros-package "tf2_msgs")
 (ros::load-ros-package "topic_tools")
 (ros::load-ros-package "trajectory_msgs")
+(ros::load-ros-package "visualization_msgs")
 (ros::load-ros-package "gz_ray_label_plugin")

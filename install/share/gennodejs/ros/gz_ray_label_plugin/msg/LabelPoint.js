@@ -21,6 +21,8 @@ class LabelPoint {
       this.x = null;
       this.y = null;
       this.z = null;
+      this.index = null;
+      this.dist = null;
       this.entityName = null;
     }
     else {
@@ -42,6 +44,18 @@ class LabelPoint {
       else {
         this.z = 0.0;
       }
+      if (initObj.hasOwnProperty('index')) {
+        this.index = initObj.index
+      }
+      else {
+        this.index = 0;
+      }
+      if (initObj.hasOwnProperty('dist')) {
+        this.dist = initObj.dist
+      }
+      else {
+        this.dist = 0.0;
+      }
       if (initObj.hasOwnProperty('entityName')) {
         this.entityName = initObj.entityName
       }
@@ -59,6 +73,10 @@ class LabelPoint {
     bufferOffset = _serializer.float32(obj.y, buffer, bufferOffset);
     // Serialize message field [z]
     bufferOffset = _serializer.float32(obj.z, buffer, bufferOffset);
+    // Serialize message field [index]
+    bufferOffset = _serializer.int32(obj.index, buffer, bufferOffset);
+    // Serialize message field [dist]
+    bufferOffset = _serializer.float64(obj.dist, buffer, bufferOffset);
     // Serialize message field [entityName]
     bufferOffset = _serializer.string(obj.entityName, buffer, bufferOffset);
     return bufferOffset;
@@ -74,6 +92,10 @@ class LabelPoint {
     data.y = _deserializer.float32(buffer, bufferOffset);
     // Deserialize message field [z]
     data.z = _deserializer.float32(buffer, bufferOffset);
+    // Deserialize message field [index]
+    data.index = _deserializer.int32(buffer, bufferOffset);
+    // Deserialize message field [dist]
+    data.dist = _deserializer.float64(buffer, bufferOffset);
     // Deserialize message field [entityName]
     data.entityName = _deserializer.string(buffer, bufferOffset);
     return data;
@@ -82,7 +104,7 @@ class LabelPoint {
   static getMessageSize(object) {
     let length = 0;
     length += object.entityName.length;
-    return length + 16;
+    return length + 28;
   }
 
   static datatype() {
@@ -92,7 +114,7 @@ class LabelPoint {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'cb95b748ab6551f3b8cd89d3a8c541fc';
+    return '783017e7320afc18fa76fea37e80ac42';
   }
 
   static messageDefinition() {
@@ -101,6 +123,8 @@ class LabelPoint {
     float32 x
     float32 y
     float32 z
+    int32 index
+    float64 dist
     string entityName
     `;
   }
@@ -130,6 +154,20 @@ class LabelPoint {
     }
     else {
       resolved.z = 0.0
+    }
+
+    if (msg.index !== undefined) {
+      resolved.index = msg.index;
+    }
+    else {
+      resolved.index = 0
+    }
+
+    if (msg.dist !== undefined) {
+      resolved.dist = msg.dist;
+    }
+    else {
+      resolved.dist = 0.0
     }
 
     if (msg.entityName !== undefined) {

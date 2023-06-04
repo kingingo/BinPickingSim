@@ -7,7 +7,7 @@ import signal
 from tf2_geometry_msgs import PointStamped, do_transform_point
 from gazebo_msgs.srv import SetModelState, SpawnModel, DeleteModel, GetModelState, GetModelStateRequest, BodyRequest
 from gazebo_msgs.msg import ModelState, ContactsState
-from geometry_msgs.msg import Pose, Quaternion, Point, TransformStamped, Point, PoseStamped
+from geometry_msgs.msg import Pose, Quaternion, TransformStamped, Point, PoseStamped, Twist
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs import point_cloud2
 from utils import *
@@ -24,7 +24,9 @@ import time
 from std_msgs.msg import String
 from gz_ray_label_plugin.msg import LabelPoint
 from gz_ray_label_plugin.msg import LabelPoints
+from gz_freeze_objects.msg import FreezeModels
 
+freeze_pub = None
 catkin_path = '/home/felix/catkin_ws'
 package_path = catkin_path+'/src/binpacking/'
 received_points_ray = False
@@ -49,7 +51,7 @@ point_publisher = None
 path = None
 color_labeling = False
 reset_gz_world = None
-camera_frame = 'camera_depth_optical_frame'
+camera_frame = ''
 bbox_px = [-0.30, 0.30]
 bbox_py = [-0.45,0.45]
 bbox_pz = [0.3, 0.5]
@@ -59,7 +61,8 @@ color_codes = {
   'Orange': "249 115 6",
   'Blue': "3 67 223",
   'Brown': "101 55 0",
-  'Pear': "203 248 95"
+  'Pear': "203 248 95",
+  "Purple": "255 0 255"
   }
 object_color_codes = []
 
@@ -67,8 +70,17 @@ def spawn_xml(model_name,
               modelxml, 
               px = None, 
               py = None, 
-              pz = None, yaw = None, roll = None, pitch = None, qx = None, qy = None, qz = None, qw = None, is_sdf = True, sleeptime = 0):
+              pz = None, 
+              yaw = None, roll = None, pitch = None, 
+              qx = None, qy = None, qz = None, qw = None, 
+              ax = None, ay = None, az = None,
+              lx = None, ly = None, lz = None,
+              is_sdf = True, 
+              sleeptime = 0,
+              add_to_list = True):
+  global spawned_objects
   pose = Pose()
+  twist = Twist()
   
   if px is not None and py is not None and pz is not None:
     pose.position.x = px
@@ -86,6 +98,16 @@ def spawn_xml(model_name,
     pose.orientation.y = qy
     pose.orientation.z = qz
     pose.orientation.w = qw
+
+  if ax is not None and ay is not None and az is not None:
+    twist.angular.x = ax
+    twist.angular.y = ay
+    twist.angular.z = az
+
+  if lx is not None and ly is not None and lz is not None:
+    twist.linear.x = lx
+    twist.linear.y = ly
+    twist.linear.z = lz
 
   if is_sdf:
     spawn_sdf_model(
@@ -105,6 +127,9 @@ def spawn_xml(model_name,
     )
   if sleeptime > 0:
     rospy.sleep(sleeptime)
+
+  if add_to_list:
+    spawned_objects.append(model_name)
   log(model_name+' spawned')
 
 def spawn(model_name, px = None, py = None, pz = None, is_sdf = True):
@@ -209,13 +234,22 @@ def camera_subscribe_callback(data):
   received_points = True
   log("camera_subscribe_callback got data from frame {}".format(camera_frame))
 
+def get_model_color(modelname):
+  global object_color_codes
+
+  for i in range(len(object_color_codes)):
+    model = object_color_codes[i]
+    if modelname.lower() == model['name'].lower():
+      return model['color']
+  return 'Black'
+
 def fill_color_label():
-  global rgbpoint
+  global rgbpoint,object_color_codes
   length = len(rgbpoint)
 
   for i in range(len(object_color_codes)):
     model = object_color_codes[i]
-    log("modelname:{} rgb:{}/{}/{} catId:{}".format(model['name'], model['r'],model['g'],model['b'],model['catId']))
+    log("modelname:{} color:{} rgb:{}/{}/{} catId:{}".format(model['name'],model['color'], model['r'],model['g'],model['b'],model['catId']))
 
   log("Start color labeling...")
   for i in range(length):
@@ -232,36 +266,57 @@ def get_pose(object):
 
   return state.pose
 
-def set_pose(object, x, y, z):
+def stop_moving(object):
+  set_pose(object, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
+  log("stop moving {}".format(object))
+
+def set_pose(object, x = None, y = None, z = None, qx = None, qy = None, qz = None, qw = None, ax = None, ay = None, az = None, lx = None, ly = None, lz = None):
   model_state = ModelState()
 
   # set the name of the object you want to move
   model_state.model_name = object
 
-  # set the new pose of the object
-  model_state.pose.position.x = x
-  model_state.pose.position.y = y
-  model_state.pose.position.z = z
+  if x is not None and y is not None and z is not None:
+    # set the new pose of the object
+    model_state.pose.position.x = x
+    model_state.pose.position.y = y
+    model_state.pose.position.z = z
 
-  # set the orientation of the object
-  model_state.pose.orientation.x = 0.0
-  model_state.pose.orientation.y = 0.0
-  model_state.pose.orientation.z = 0.0
-  model_state.pose.orientation.w = 0.0
-  model_state.twist
+  if ax is not None and ay is not None and az is not None:
+    model_state.twist.angular.x = ax
+    model_state.twist.angular.y = ay
+    model_state.twist.angular.z = az
+
+  if lx is not None and ly is not None and lz is not None:
+    model_state.twist.linear.x = lx
+    model_state.twist.linear.y = ly
+    model_state.twist.linear.z = lz
+
+  if qx is not None and qy is not None and qz is not None and qw is not None:
+    # set the orientation of the object
+    model_state.pose.orientation.x = qx
+    model_state.pose.orientation.y = qy
+    model_state.pose.orientation.z = qz
+    model_state.pose.orientation.w = qw
+  else:
+    model_state.pose.orientation.x = 0.0
+    model_state.pose.orientation.y = 0.0
+    model_state.pose.orientation.z = 0.0
+    model_state.pose.orientation.w = 0.0
+
   set_state(model_state)
 
 
-def respawn_objects(static = True):
+def respawn_objects(_static = True):
   global spawned_objects
   objs = []
-  joint = ''
 
   log("log object locations")
   for obj in spawned_objects:
     pose = get_pose(obj)
     pos = pose.position
     orientation = pose.orientation
+    twist = pose.twist
     objs.append( 
       {'name':obj, 
        'x': pos.x, 
@@ -290,22 +345,12 @@ def respawn_objects(static = True):
     model = str_split[len(str_split)-1]
     model = model.lower()
 
-    if static:
-      joint = joint_xml(obj)
-
-    if model == 'banana':
-      color = 'Yellow'
-    elif model == 'apple':
-      color = 'Red'
-    elif model == 'orange':
-      color = 'Orange'
-    else:
-      color = 'Blue'
-
-    xml = get_xml(obj, '/'+model+'/', model, color, joint)
-    spawn_xml(obj, xml, px=px, py= py, pz= pz, qx = qx, qy = qy, qz = qz, qw = qw, is_sdf = True)
+    color = get_model_color(model)
+    xml = get_xml(obj, '/'+model+'/', model, color, static = _static)
+    spawn_xml(obj, xml, is_sdf = True)
     spawned_objects.append(obj)
-    log('{} respawned'.format(data))
+    set_pose(obj, x=px, y=py, z = pz, qx = qx, qy = qy, qz = qz, qw = qw)
+    log('{} respawned'.format(obj))
 
 def get_index_from_point(name1, name2):
   id = 0
@@ -543,7 +588,6 @@ def track_collisions():
   """
 
   sub.unregister()
-  #unpause_physics(EmptyRequest())
 
 def subscribe_to_camera():
   global received_points,rgbpoint
@@ -823,7 +867,7 @@ def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static
     g = int(rgb[1])
     b = int(rgb[2])
     log("Add {} with {}/{}/{} catId={}".format(model_name, r, g, b, catId))
-    object_color_codes.append({'name':model_name, 'r':r, 'g':g, 'b':b, 'catId':catId})
+    object_color_codes.append({'name':model_name, 'r':r, 'g':g, 'b':b,'color':color, 'catId':catId})
 
   return xml.format(model_name=model_name, color = color, joint = '' if not joint else joint, static = 'false' if not static else 'true')
 
@@ -879,30 +923,6 @@ def spawn_objects(xmls, is_sdf = True, start_id = 0):
     spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
     spawned_objects.append(model_name)
 
-
-'''
-def spawn_objects(amount = 6, name = 'box', path = '', is_sdf = True, default_color = '', start_id = 0, catId = 0):
-  #<pose> x y z roll pitch yaw</pose>
-  global bbox_px, bbox_py, bbox_pz
-
-  #spawn objects
-  for i in range(amount):
-    px = random.uniform(bbox_px[0]+0.1, bbox_px[1]-0.1)
-    py = random.uniform(bbox_py[0]+0.1, bbox_py[1]-0.1)
-    pz = random.uniform(bbox_pz[0], bbox_pz[1])
-
-    if default_color == '':
-      color = 'Blue'
-    else:
-      color = default_color
-
-    model_name = '{}_{}_{}'.format(catId,start_id+i+2,name)
-    xml = get_xml(name, path, name, color, catId=catId)
-    spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
-      
-    spawned_objects.append(model_name)
-'''
-
 def calc_distance(x = 0,y = 0,z = 1.8, bx = 0, by = 0, bz = 0):
   camera_pos = np.array([x,y,z])
   box_pos = np.array([bx,by,bz])
@@ -910,36 +930,11 @@ def calc_distance(x = 0,y = 0,z = 1.8, bx = 0, by = 0, bz = 0):
 
   return math.sqrt(math.pow(camera_to_target[0],2) + math.pow(camera_to_target[1], 2) + math.pow(camera_to_target[2], 2))
 
-def calculate_yaw_pitch_roll(direction_vector):
-    direction_vector = np.array(direction_vector)
-    direction_vector /= np.linalg.norm(direction_vector)
-
-    z = np.array([0, 0, 1])
-    right = np.cross(z, direction_vector)
-    right /= np.linalg.norm(right)
-
-    up = np.cross(direction_vector, right)
-
-    rotation_matrix = np.array([
-        [right[0], up[0], direction_vector[0]],
-        [right[1], up[1], direction_vector[1]],
-        [right[2], up[2], direction_vector[2]]
-    ])
-
-    yaw = np.arctan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
-    pitch = np.arctan2(-rotation_matrix[2, 0], np.sqrt(rotation_matrix[2, 1]**2 + rotation_matrix[2, 2]**2))
-    roll = np.arctan2(rotation_matrix[2, 1], rotation_matrix[2, 2])
-
-    return yaw, pitch, roll
-
 def calc_camera_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
   camera_pos = np.array([x,y,z])
   box_pos = np.array([bx,by,bz])
 
   camera_to_target = box_pos - camera_pos
-
-  #yaw, pitch, roll = calculate_yaw_pitch_roll(camera_to_target)
-
   yaw = np.arctan2(camera_to_target[1],camera_to_target[0])
   pitch = np.arctan2(-camera_to_target[2], np.sqrt(camera_to_target[0]**2 + camera_to_target[1]**2))
   roll = np.arctan2(camera_to_target[0], camera_to_target[1])
@@ -947,49 +942,7 @@ def calc_camera_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
 
   q = euler_to_quaternion(roll, pitch, yaw)
   log("quanternion x/y/z/w: {}/{}/{}/{}".format(q[0],q[1],q[2],q[3]))
-  #yaw = np.arctan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
-  #pitch = np.arctan2(-rotation_matrix[2, 0], np.sqrt(rotation_matrix[2, 1]**2 + rotation_matrix[2, 2]**2))
-  #roll = np.arctan2(rotation_matrix[2, 1], rotation_matrix[2, 2])
-
   return {'x':camera_pos[0], 'y':camera_pos[1], 'z':camera_pos[2], 'yaw': yaw, 'pitch': pitch, 'roll': roll}
-
-def calibrate_camera():
-  global xpoint, ypoint, zpoint, worldpoints, bbox_px, bbox_py
-
-  pos = calc_camera_location()
-  camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
-  send_world_frame(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
-  
-  sub = rospy.Subscriber("/camera/depth/color/points", PointCloud2, camera_subscribe_callback)
-  log("wait 10 seconds to gather points for calibration")
-  rospy.sleep(10)
-  sub.unregister()
-  rospy.sleep(5)
-
-  volume = len(xpoint)
-  transform_points()
-  filter_points()
-  counter = len(xpoint)
-  """
-  log("check area volume={}".format(volume))
-  counter = 0
-  for i in range(volume):
-    x = xpoint[i]
-    y = ypoint[i]
-    z = zpoint[i]
-    p = transform_cp_to_wp(x,y,z)
-    wx = p[0]
-    wy = p[1]
-    wz = p[2]
-
-    if bbox_px[0] < wx and bbox_px[1] > wx and bbox_py[0] < wy and bbox_py[1] > wy:
-      counter+=1
-  """
-  p = (int(counter) / int(volume))
-  percentage = p * 100
-
-  log("counter={}, volume={}".format(counter,volume))
-  log("{} % of the area is important   {}".format(percentage,p))
 
 def convert_rgb():
   global rgbpoint
@@ -1044,9 +997,10 @@ def sample_down_pointcloud():
 #Transfrom camera point to world point
 def transform_cp_to_wp(x, y, z):
   global camera_frame, listener, world_frame_name
+  
   world_name = world_frame_name
   p1 = PoseStamped()
-  p1.header.stamp = rospy.Time.now()
+  p1.header.stamp = rospy.Time(0)
   p1.header.frame_id = camera_frame
   p1.pose.position.x = x
   p1.pose.position.y = y
@@ -1079,22 +1033,7 @@ def transform_points():
 
   if nott > 0:
     log("not transformed {} {}".format(nott, volume))
-
   log("transform done: points={}, worldpoints={}".format(len(xpoint), len(worldpoints)))
-
-  '''
-  delete_spawned_objects()
-  for i in range(volume):
-      x = worldpoints[i][0]
-      y = worldpoints[i][1]
-      z = worldpoints[i][2]
-      xml = _get_xml('box', 'Red', catId=0)
-      spawn_xml('{}_box'.format(i), px=x, py=y, pz=z, modelxml=xml)
-    
-  rospy.spin()
-  '''
-      
-
 
 def rospy_sleep(seconds, nseconds = 0):
   duration = rospy.Duration(seconds,nseconds)
@@ -1109,11 +1048,8 @@ def reset_simulation():
         rospy.logerr("Service call failed: " + str(e))
 
 def kill_sim():
-  proc = subprocess.Popen(['python3', 'binpacking.py'], shell=False)
-  rospy.sleep(0.2)
-  proc.send_signal(signal.SIGINT)
-  os.system('killall -9 gzserver gzclient screen')
-  proc.wait()
+  #os.system('killall -9 gzserver gzclient screen')
+  os.system("ps -ef | grep 'ros' | grep -v grep | awk '{print $2}' | xargs -r kill -9")
 
 def callback_ray_labeled_points(data):
   global labelpoint, received_points_ray,worldpoints
@@ -1121,7 +1057,7 @@ def callback_ray_labeled_points(data):
     return
   log("Got labeled data: {}".format(len(data.points)))
 
-  count_map = [0] * len(object_color_codes)
+  count_map = [0] * (len(object_color_codes)+1)
   kinect_plugin = 0
   none = 0
   ground_plane = 0
@@ -1142,16 +1078,6 @@ def callback_ray_labeled_points(data):
       try:
         id = int(entity.split("_")[0])
         count_map[id] = count_map[id] + 1
-
-        '''
-        x = worldpoints[index][0]
-        y = worldpoints[index][1]
-        z = worldpoints[index][2]
-
-        if x is not point.x or y is not point.y or z is not point.z:
-          log("{} = {} world x/y/z {}/{}/{}, point {}/{}/{}".format(i,index,x,y,z, point.x,point.y,point.z))
-        '''
-
         labelpoint[index] = id
       except:
         labelpoint[index] = 0
@@ -1168,8 +1094,8 @@ def label_points_by_ray():
   global worldpoints, received_points_ray, xpoint, ypoint, zpoint
   received_points_ray = False
 
-  pos = calc_camera_location()
-  camera_set_pose(pos['x'], pos['y'], 4, pos['roll'], pos['pitch'], pos['yaw'])
+  #pos = calc_camera_location()
+  #camera_set_pose(pos['x'], pos['y'], 4, pos['roll'], pos['pitch'], pos['yaw'])
 
   pub = rospy.Publisher('/ray/points', LabelPoints, queue_size = 10)
   sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
@@ -1196,25 +1122,41 @@ def label_points_by_ray():
   log("labeling points done :)")
   sub.unregister()
   pub.unregister()
-  camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
+  #camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
 def compare_labels():
   global clabelpoint, labelpoint,world_frame_name
 
   length = len(labelpoint)
   clength = len(clabelpoint)
-  count_map = [0] * len(object_color_codes)
+  count_map = [0] * (len(object_color_codes)+1)
   for i in range(length):
-    i = labelpoint[i]
-    ci = clabelpoint[i]
+    id = labelpoint[i]
+    cid = clabelpoint[i]
 
-    if i == ci:
-      count_map[i] += 1
+    if cid == id:
+      count_map[id] += 1
 
   log("clabelpoint vol: {}".format(clength))
   log("labelpoint vol: {}".format(length))
   for i in range(len(count_map)):
     log("catId: {} found euqal {}".format(i, count_map[i]))
+
+def unfreeze():
+  global freeze_pub
+  msg = FreezeModels()
+  msg.freeze = False
+  freeze_pub.publish(msg)
+
+def freeze():
+  global freeze_pub
+  msg = FreezeModels()
+  msg.freeze = True
+  
+  for i in range(len(spawned_objects)):
+    msg.models.append(spawned_objects[i])
+
+  freeze_pub.publish(msg)
 
 if __name__ == '__main__':
   global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state
@@ -1235,8 +1177,7 @@ if __name__ == '__main__':
       log("checkpoint loaded")
     else:
       log("Couldn't find checkpoint")
-      
-
+     
   log("wait for services...")
   rospy.wait_for_service('/gazebo/spawn_sdf_model')
   rospy.wait_for_service('/gazebo/spawn_urdf_model')
@@ -1244,8 +1185,6 @@ if __name__ == '__main__':
   rospy.wait_for_service('/gazebo/set_model_state')
   rospy.wait_for_service('/gazebo/get_model_state')
   rospy.wait_for_service('/gazebo/clear_body_wrenches')
-
-  #rospy.wait_for_service('/gazebo/reset_world')
 
   delete_model = rospy.ServiceProxy("/gazebo/delete_model", DeleteModel)
   spawn_sdf_model = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
@@ -1255,36 +1194,15 @@ if __name__ == '__main__':
   pause_physics = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
   unpause_physics = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
   clear_body_wrench = rospy.ServiceProxy('gazebo/clear_body_wrenches', BodyRequest)
-  #link_states = rospy.ServiceProxy('/gazebo/link_states', Empty)
-  '''
-  log("SLEEP 2 SECS")
-  rospy.sleep(2)
-
-  pub = rospy.Publisher('/ray/points', LabelPoints, queue_size = 10)
-  sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
-  cloud = LabelPoints()
-  for j in range(80000):
-    point = LabelPoint()
-    point.x = random.randint(-10,10)
-    point.y = random.randint(-10,10)
-    point.z = 0.2
-
-    cloud.points.append(point)
-
-  pub.publish(cloud)
-
-
-  log("PUBLISH LABEL CLOUD")
-
-  rospy.spin()
-  '''
+  freeze_pub = rospy.Publisher('freeze', FreezeModels, queue_size = 1)
+  
   #set camera on right position
   #pos = calc_camera_location()
   #camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
   #spawn stackingbox
   xml = _get_xml('stackingbox', 'Blue', catId=1)
-  spawn_xml('1_stackingbox', xml)
+  spawn_xml('1_stackingbox', xml, add_to_list=False)
   #init transform function from cp to wp
   tf_buffer = tf2_ros.Buffer()
   tf_listener = tf2_ros.TransformListener(tf_buffer)
@@ -1293,8 +1211,8 @@ if __name__ == '__main__':
   #pcl_ros::transformPointCloud(destination_frame,from_cloud,to_cloud,TransformListener)
   #Add world frame
   tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
-  world_frame_name = 'ray_frame'
-  send_world_frame(0, 0, 0, rx=-0.499999999463, ry=0.499999999463,rz=-0.499976836603, rw=0.500023163397)
+  world_frame_name = 'map' #ray_frame
+  #send_world_frame(0, 0, 0, rx=-0.499999999463, ry=0.499999999463,rz=-0.499976836603, rw=0.500023163397)
 
   if type(jump_to_checkpoint) == list:
     log("load object for checkpoint")
@@ -1314,86 +1232,42 @@ if __name__ == '__main__':
     delete_spawned_objects()
     log("done with checkpoint :)")
 
-  """
-  positions = [
-    [0, 0, 1], 
-    [0.5, 0, 0.5], 
-    [-0.5, 0, 0.5],
-    [0, -0.5, 0.5], 
-    [0, 0.5, 0.5], 
-    [0, 0, 0.2]
-  ]
-
-  xml = get_xml("2_box", '', 'box', 'Blue', False, True)
-  spawn_xml('2_box', xml, 0, 0, 0.5, True)
-  clear_all_forces()
-
-  xp = []
-  yp = []
-  zp = []
-  wp = []
-  l = []
-
-  for i in range(len(positions)):
-    _pos = positions[i]
-    log("POS: {}".format(_pos))
-    pos = calc_camera_location(_pos[0], _pos[1], _pos[2], 0 , 0, 0.3)
-    camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
-    send_world_frame(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
-    subscribe_to_camera()
-    transform_points()
-
-    xp = xp + xpoint
-    yp = yp + ypoint
-    zp = zp + zpoint
-    wp = wp + worldpoints
-    l = l + labelpoint 
-
-    xpoint = []
-    ypoint = []
-    zpoint = []
-    worldpoints = []
-    labelpoint = []
-
-  xpoint = xp
-  ypoint = yp
-  zpoint = zp
-  worldpoints = wp
-  labelpoint = l
-  filter_points(-0.025, 0.025, -0.025, 0.025)
-  save_checkpoint()
-  write_pointcloud()
-  rospy.spin()
-  
-  """
-
   banana_xml = get_xml('banana', '/banana/', 'banana', 'Yellow', catId=2)
   apple_xml = get_xml('apple', '/apple/', 'apple', 'Red', catId=3)
   orange_xml = get_xml('orange', '/orange/', 'orange', 'Orange', catId=4)
   pear_xml = get_xml('pear', '/pear/', 'pear', 'Pear', catId=5)
-  xmls = [
-    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':1},
-    #{'name':'apple','catId':3, 'xml':apple_xml, 'amount':1},
-    #{'name':'orange','catId':4, 'xml':orange_xml, 'amount':1},
-    #{'name':'pear','catId':5, 'xml':pear_xml, 'amount':1}
-  ]
+  plum_xml = get_xml('plum', '/plum/', 'plum', 'Purple', catId=6)
+  sleeptime = 3
+
   '''
   xmls = [
-    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':5 + random.randint(8,22)},
-    {'name':'apple','catId':3, 'xml':apple_xml, 'amount':5 + random.randint(8,22)},
-    {'name':'orange','catId':4, 'xml':orange_xml, 'amount':5 + random.randint(8,22)},
-    {'name':'pear','catId':5, 'xml':pear_xml, 'amount':5 + random.randint(8,22)}
+    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':3},
+    {'name':'apple','catId':3, 'xml':apple_xml, 'amount':3},
+    {'name':'orange','catId':4, 'xml':orange_xml, 'amount':3},
+    {'name':'pear','catId':5, 'xml':pear_xml, 'amount':3}
   ]
   '''
 
+  xmls = [
+    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':5 + random.randint(5,15)},
+    {'name':'apple','catId':3, 'xml':apple_xml, 'amount':5 + random.randint(5,15)},
+    {'name':'orange','catId':4, 'xml':orange_xml, 'amount':5 + random.randint(5,15)},
+    {'name':'pear','catId':5, 'xml':pear_xml, 'amount':5 + random.randint(5,15)},
+    {'name':'plum','catId':6, 'xml':plum_xml, 'amount':5 + random.randint(5,15)}
+  ]
   start_time = time.time()
   #spawn objects in box
+  
   spawn_objects(xmls)
-  sleeptime = 3
+  
+  #spawn_xml('3_apple', apple_xml, px = 0, py = 0, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
+  #spawn_xml('2_banana', banana_xml, px = 0.2, py = 0.1, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
   log("wait {} seconds".format(sleeptime))
   rospy_sleep(sleeptime)
   log("done sleeping lets start")
-  clear_all_forces()
+  freeze()
+  
+  #clear_all_forces()
   #respawn_objects()
   #subscribe to camera and gather pointsg
   subscribe_to_camera()
@@ -1413,7 +1287,8 @@ if __name__ == '__main__':
   #storage training data
   write_pointcloud()
   #delete all spawned objects
-  delete_spawned_objects()
+  unfreeze()
+  #delete_spawned_objects()
   diff_time = time.time() - start_time
   log("the round took {}".format(td(seconds = diff_time)))
   kill_sim()

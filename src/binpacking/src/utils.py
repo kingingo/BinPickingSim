@@ -12,79 +12,18 @@ from datetime import timedelta as td
 from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_diff import delta_e_cie1976
 from colormath.color_conversions import convert_color
+from pytransform3d import transformations as pt
+from pytransform3d import rotations as pr
+from pytransform3d.trajectories import transforms_from_pqs
+from pytransform3d.transform_manager import TransformManager
 
-def rotation_matrix(yaw_rad, pitch_rad, roll_rad):
-    # Compute trigonometric values
-    cos_yaw = np.cos(yaw_rad)
-    sin_yaw = np.sin(yaw_rad)
-    cos_pitch = np.cos(pitch_rad)
-    sin_pitch = np.sin(pitch_rad)
-    cos_roll = np.cos(roll_rad)
-    sin_roll = np.sin(roll_rad)
+def transform2(x,y,z, cam_pos = [0,0,0], cam_rot = {'roll':0,'pitch':0,'yaw':0}):
+  qx, qy, qz, qw = euler_to_quaternion(cam_rot['roll'], cam_rot['pitch'], cam_rot['yaw'])
+  p = pt.transform_from_pq([cam_pos[0], cam_pos[1], cam_pos[2], qw, qx, qy, qz])
+  p = pt.invert_transform(p)
 
-    # Compute rotation matrix elements
-    r11 = cos_yaw * cos_pitch
-    r12 = cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll
-    r13 = cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll
-
-    r21 = sin_yaw * cos_pitch
-    r22 = sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll
-    r23 = sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll
-
-    r31 = -sin_pitch
-    r32 = cos_pitch * sin_roll
-    r33 = cos_pitch * cos_roll
-
-    # Create rotation matrix
-    rotation_matrix = np.array([[r11, r12, r13],
-                                [r21, r22, r23],
-                                [r31, r32, r33]])
-    return rotation_matrix
-
-def transform1(x,y,z, tx, ty, tz, pitch, yaw, roll):
-  # Camera's position vector in the world frame
-  T_cw = np.array([tx, ty, tz])
-
-  # Camera's orientation matrix in the world frame
-  R_cw = rotation_matrix(yaw, pitch, roll)  # Obtain the rotation matrix representing the camera's orientation
-
-  # Homogeneous representation of the point
-  P_c_homogeneous = np.array([x, y, z])
-
-  # Transformation to the world frame
-  P_w = np.dot(R_cw, P_c_homogeneous) + T_cw
-
-  # Transformed point in the world frame
-  x_w = P_w[0]
-  y_w = P_w[1]
-  z_w = P_w[2]
-
-  return x_w, y_w, z_w
-
-def transfrom(x,y,z, tx, ty, tz, pitch, yaw, roll):
-   # Original 3D point
-  P = np.array([x-tx, y-ty, z-tz])
-
-  # Rotation matrices
-  R_pitch = np.array([[1, 0, 0],
-                      [0, np.cos(pitch), -np.sin(pitch)],
-                      [0, np.sin(pitch), np.cos(pitch)]])
-
-  R_yaw = np.array([[np.cos(yaw), 0, np.sin(yaw)],
-                    [0, 1, 0],
-                    [-np.sin(yaw), 0, np.cos(yaw)]])
-
-  R_roll = np.array([[np.cos(roll), -np.sin(roll), 0],
-                    [np.sin(roll), np.cos(roll), 0],
-                    [0, 0, 1]])
-
-  # Transformation
-  P_prime = np.dot(R_roll, np.dot(R_yaw, np.dot(R_pitch, P)))
-
-  # Transformed point
-  transformed_x, transformed_y, transformed_z = P_prime
-
-  return transformed_x, transformed_y, transformed_z
+  x,y,z,s = pt.transform(p,[x,y,z,1])
+  return x,y,z
 
 def deltaE_diff(c1, c2):
     # Reference color.

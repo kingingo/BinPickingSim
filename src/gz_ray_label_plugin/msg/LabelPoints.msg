@@ -1,7 +1,6 @@
 LabelPoint[] points
-float32 px
-float32 py
-float32 pz
-float32 dx
-float32 dy
-float32 dz
+float32 scaling=0.3
+float32 start_z=0.5
+float32 end_z=0.0
+int32 rate=800
+int8 showMarker=0

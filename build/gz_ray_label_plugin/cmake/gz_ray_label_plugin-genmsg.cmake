@@ -2,7 +2,7 @@
 
 message(STATUS "gz_ray_label_plugin: 2 messages, 0 services")
 
-set(MSG_I_FLAGS "-Igz_ray_label_plugin:/home/felix/catkin_ws/src/gz_ray_label_plugin/msg;-Istd_msgs:/opt/ros/melodic/share/std_msgs/cmake/../msg")
+set(MSG_I_FLAGS "-Igz_ray_label_plugin:/home/felix/catkin_ws/src/gz_ray_label_plugin/msg;-Istd_msgs:/opt/ros/melodic/share/std_msgs/cmake/../msg;-Ivisualization_msgs:/opt/ros/melodic/share/visualization_msgs/cmake/../msg;-Igeometry_msgs:/opt/ros/melodic/share/geometry_msgs/cmake/../msg")
 
 # Find all generators
 find_package(gencpp REQUIRED)
@@ -248,6 +248,9 @@ endif()
 if(TARGET std_msgs_generate_messages_cpp)
   add_dependencies(gz_ray_label_plugin_generate_messages_cpp std_msgs_generate_messages_cpp)
 endif()
+if(TARGET visualization_msgs_generate_messages_cpp)
+  add_dependencies(gz_ray_label_plugin_generate_messages_cpp visualization_msgs_generate_messages_cpp)
+endif()
 
 if(geneus_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/gz_ray_label_plugin)
   # install generated code
@@ -258,6 +261,9 @@ if(geneus_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/gz
 endif()
 if(TARGET std_msgs_generate_messages_eus)
   add_dependencies(gz_ray_label_plugin_generate_messages_eus std_msgs_generate_messages_eus)
+endif()
+if(TARGET visualization_msgs_generate_messages_eus)
+  add_dependencies(gz_ray_label_plugin_generate_messages_eus visualization_msgs_generate_messages_eus)
 endif()
 
 if(genlisp_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/gz_ray_label_plugin)
@@ -270,6 +276,9 @@ endif()
 if(TARGET std_msgs_generate_messages_lisp)
   add_dependencies(gz_ray_label_plugin_generate_messages_lisp std_msgs_generate_messages_lisp)
 endif()
+if(TARGET visualization_msgs_generate_messages_lisp)
+  add_dependencies(gz_ray_label_plugin_generate_messages_lisp visualization_msgs_generate_messages_lisp)
+endif()
 
 if(gennodejs_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/gz_ray_label_plugin)
   # install generated code
@@ -280,6 +289,9 @@ if(gennodejs_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_D
 endif()
 if(TARGET std_msgs_generate_messages_nodejs)
   add_dependencies(gz_ray_label_plugin_generate_messages_nodejs std_msgs_generate_messages_nodejs)
+endif()
+if(TARGET visualization_msgs_generate_messages_nodejs)
+  add_dependencies(gz_ray_label_plugin_generate_messages_nodejs visualization_msgs_generate_messages_nodejs)
 endif()
 
 if(genpy_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/gz_ray_label_plugin)
@@ -292,4 +304,7 @@ if(genpy_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/gz_r
 endif()
 if(TARGET std_msgs_generate_messages_py)
   add_dependencies(gz_ray_label_plugin_generate_messages_py std_msgs_generate_messages_py)
+endif()
+if(TARGET visualization_msgs_generate_messages_py)
+  add_dependencies(gz_ray_label_plugin_generate_messages_py visualization_msgs_generate_messages_py)
 endif()

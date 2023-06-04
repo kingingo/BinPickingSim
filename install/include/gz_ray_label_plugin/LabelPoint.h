@@ -27,12 +27,16 @@ struct LabelPoint_
     : x(0.0)
     , y(0.0)
     , z(0.0)
+    , index(0)
+    , dist(0.0)
     , entityName()  {
     }
   LabelPoint_(const ContainerAllocator& _alloc)
     : x(0.0)
     , y(0.0)
     , z(0.0)
+    , index(0)
+    , dist(0.0)
     , entityName(_alloc)  {
   (void)_alloc;
     }
@@ -47,6 +51,12 @@ struct LabelPoint_
 
    typedef float _z_type;
   _z_type z;
+
+   typedef int32_t _index_type;
+  _index_type index;
+
+   typedef double _dist_type;
+  _dist_type dist;
 
    typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _entityName_type;
   _entityName_type entityName;
@@ -83,6 +93,8 @@ bool operator==(const ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator1> & 
   return lhs.x == rhs.x &&
     lhs.y == rhs.y &&
     lhs.z == rhs.z &&
+    lhs.index == rhs.index &&
+    lhs.dist == rhs.dist &&
     lhs.entityName == rhs.entityName;
 }
 
@@ -140,12 +152,12 @@ struct MD5Sum< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "cb95b748ab6551f3b8cd89d3a8c541fc";
+    return "783017e7320afc18fa76fea37e80ac42";
   }
 
   static const char* value(const ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xcb95b748ab6551f3ULL;
-  static const uint64_t static_value2 = 0xb8cd89d3a8c541fcULL;
+  static const uint64_t static_value1 = 0x783017e7320afc18ULL;
+  static const uint64_t static_value2 = 0xfa76fea37e80ac42ULL;
 };
 
 template<class ContainerAllocator>
@@ -167,6 +179,8 @@ struct Definition< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >
     return "float32 x\n"
 "float32 y\n"
 "float32 z\n"
+"int32 index\n"
+"float64 dist\n"
 "string entityName\n"
 ;
   }
@@ -189,6 +203,8 @@ namespace serialization
       stream.next(m.x);
       stream.next(m.y);
       stream.next(m.z);
+      stream.next(m.index);
+      stream.next(m.dist);
       stream.next(m.entityName);
     }
 
@@ -214,6 +230,10 @@ struct Printer< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >
     Printer<float>::stream(s, indent + "  ", v.y);
     s << indent << "z: ";
     Printer<float>::stream(s, indent + "  ", v.z);
+    s << indent << "index: ";
+    Printer<int32_t>::stream(s, indent + "  ", v.index);
+    s << indent << "dist: ";
+    Printer<double>::stream(s, indent + "  ", v.dist);
     s << indent << "entityName: ";
     Printer<std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.entityName);
   }

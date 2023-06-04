@@ -5,6 +5,10 @@
           Y
           Z-VAL
           Z
+          INDEX-VAL
+          INDEX
+          DIST-VAL
+          DIST
           ENTITYNAME-VAL
           ENTITYNAME
 ))

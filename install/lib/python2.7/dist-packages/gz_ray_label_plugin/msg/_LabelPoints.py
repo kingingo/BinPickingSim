@@ -9,18 +9,26 @@ import struct
 import gz_ray_label_plugin.msg
 
 class LabelPoints(genpy.Message):
-  _md5sum = "a2a82d81b27b9b480fb075f2d96f64cd"
+  _md5sum = "2ded0ab792e6fc382d669b9d328e650f"
   _type = "gz_ray_label_plugin/LabelPoints"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """LabelPoint[] points
+float32 px
+float32 py
+float32 pz
+float32 dx
+float32 dy
+float32 dz
 ================================================================================
 MSG: gz_ray_label_plugin/LabelPoint
 float32 x
 float32 y
 float32 z
+int32 index
+float64 dist
 string entityName"""
-  __slots__ = ['points']
-  _slot_types = ['gz_ray_label_plugin/LabelPoint[]']
+  __slots__ = ['points','px','py','pz','dx','dy','dz']
+  _slot_types = ['gz_ray_label_plugin/LabelPoint[]','float32','float32','float32','float32','float32','float32']
 
   def __init__(self, *args, **kwds):
     """
@@ -30,7 +38,7 @@ string entityName"""
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       points
+       points,px,py,pz,dx,dy,dz
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -41,8 +49,26 @@ string entityName"""
       # message fields cannot be None, assign default values for those that are
       if self.points is None:
         self.points = []
+      if self.px is None:
+        self.px = 0.
+      if self.py is None:
+        self.py = 0.
+      if self.pz is None:
+        self.pz = 0.
+      if self.dx is None:
+        self.dx = 0.
+      if self.dy is None:
+        self.dy = 0.
+      if self.dz is None:
+        self.dz = 0.
     else:
       self.points = []
+      self.px = 0.
+      self.py = 0.
+      self.pz = 0.
+      self.dx = 0.
+      self.dy = 0.
+      self.dz = 0.
 
   def _get_types(self):
     """
@@ -60,13 +86,15 @@ string entityName"""
       buff.write(_struct_I.pack(length))
       for val1 in self.points:
         _x = val1
-        buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
+        buff.write(_get_struct_3fid().pack(_x.x, _x.y, _x.z, _x.index, _x.dist))
         _x = val1.entityName
         length = len(_x)
         if python3 or type(_x) == unicode:
           _x = _x.encode('utf-8')
           length = len(_x)
         buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      _x = self
+      buff.write(_get_struct_6f().pack(_x.px, _x.py, _x.pz, _x.dx, _x.dy, _x.dz))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -89,8 +117,8 @@ string entityName"""
         val1 = gz_ray_label_plugin.msg.LabelPoint()
         _x = val1
         start = end
-        end += 12
-        (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
+        end += 24
+        (_x.x, _x.y, _x.z, _x.index, _x.dist,) = _get_struct_3fid().unpack(str[start:end])
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
@@ -101,6 +129,10 @@ string entityName"""
         else:
           val1.entityName = str[start:end]
         self.points.append(val1)
+      _x = self
+      start = end
+      end += 24
+      (_x.px, _x.py, _x.pz, _x.dx, _x.dy, _x.dz,) = _get_struct_6f().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -117,13 +149,15 @@ string entityName"""
       buff.write(_struct_I.pack(length))
       for val1 in self.points:
         _x = val1
-        buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
+        buff.write(_get_struct_3fid().pack(_x.x, _x.y, _x.z, _x.index, _x.dist))
         _x = val1.entityName
         length = len(_x)
         if python3 or type(_x) == unicode:
           _x = _x.encode('utf-8')
           length = len(_x)
         buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      _x = self
+      buff.write(_get_struct_6f().pack(_x.px, _x.py, _x.pz, _x.dx, _x.dy, _x.dz))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -147,8 +181,8 @@ string entityName"""
         val1 = gz_ray_label_plugin.msg.LabelPoint()
         _x = val1
         start = end
-        end += 12
-        (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
+        end += 24
+        (_x.x, _x.y, _x.z, _x.index, _x.dist,) = _get_struct_3fid().unpack(str[start:end])
         start = end
         end += 4
         (length,) = _struct_I.unpack(str[start:end])
@@ -159,6 +193,10 @@ string entityName"""
         else:
           val1.entityName = str[start:end]
         self.points.append(val1)
+      _x = self
+      start = end
+      end += 24
+      (_x.px, _x.py, _x.pz, _x.dx, _x.dy, _x.dz,) = _get_struct_6f().unpack(str[start:end])
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -167,9 +205,15 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
-_struct_3f = None
-def _get_struct_3f():
-    global _struct_3f
-    if _struct_3f is None:
-        _struct_3f = struct.Struct("<3f")
-    return _struct_3f
+_struct_3fid = None
+def _get_struct_3fid():
+    global _struct_3fid
+    if _struct_3fid is None:
+        _struct_3fid = struct.Struct("<3fid")
+    return _struct_3fid
+_struct_6f = None
+def _get_struct_6f():
+    global _struct_6f
+    if _struct_6f is None:
+        _struct_6f = struct.Struct("<6f")
+    return _struct_6f

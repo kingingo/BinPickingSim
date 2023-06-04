@@ -24,6 +24,8 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   std_msgs
   gazebo_msgs
+  rviz
+  visualization_msgs
 )
 
 add_message_files(
@@ -31,7 +33,7 @@ add_message_files(
   LabelPoint.msg 
   LabelPoints.msg 
 )
-generate_messages(DEPENDENCIES std_msgs)
+generate_messages(DEPENDENCIES std_msgs visualization_msgs)
 
 # Depend on system install of Gazebo
 find_package(gazebo REQUIRED)
@@ -49,7 +51,12 @@ link_directories(
 #add_subdirectory(msgs)
 
 catkin_package(
-  CATKIN_DEPENDS roscpp gazebo_ros
+  LIBRARIES
+    rviz
+    ${OGRE_LIBRARIES}
+    ${rviz_ADDITIONAL_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+  CATKIN_DEPENDS roscpp gazebo_ros visualization_msgs
 )
 
 add_library(${PROJECT_NAME} src/gz_ray_label_plugin.cc)

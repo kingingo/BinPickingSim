@@ -25,10 +25,22 @@ struct LabelPoints_
   typedef LabelPoints_<ContainerAllocator> Type;
 
   LabelPoints_()
-    : points()  {
+    : points()
+    , px(0.0)
+    , py(0.0)
+    , pz(0.0)
+    , dx(0.0)
+    , dy(0.0)
+    , dz(0.0)  {
     }
   LabelPoints_(const ContainerAllocator& _alloc)
-    : points(_alloc)  {
+    : points(_alloc)
+    , px(0.0)
+    , py(0.0)
+    , pz(0.0)
+    , dx(0.0)
+    , dy(0.0)
+    , dz(0.0)  {
   (void)_alloc;
     }
 
@@ -36,6 +48,24 @@ struct LabelPoints_
 
    typedef std::vector< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> , typename std::allocator_traits<ContainerAllocator>::template rebind_alloc< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >> _points_type;
   _points_type points;
+
+   typedef float _px_type;
+  _px_type px;
+
+   typedef float _py_type;
+  _py_type py;
+
+   typedef float _pz_type;
+  _pz_type pz;
+
+   typedef float _dx_type;
+  _dx_type dx;
+
+   typedef float _dy_type;
+  _dy_type dy;
+
+   typedef float _dz_type;
+  _dz_type dz;
 
 
 
@@ -66,7 +96,13 @@ return s;
 template<typename ContainerAllocator1, typename ContainerAllocator2>
 bool operator==(const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator1> & lhs, const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator2> & rhs)
 {
-  return lhs.points == rhs.points;
+  return lhs.points == rhs.points &&
+    lhs.px == rhs.px &&
+    lhs.py == rhs.py &&
+    lhs.pz == rhs.pz &&
+    lhs.dx == rhs.dx &&
+    lhs.dy == rhs.dy &&
+    lhs.dz == rhs.dz;
 }
 
 template<typename ContainerAllocator1, typename ContainerAllocator2>
@@ -123,12 +159,12 @@ struct MD5Sum< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "a2a82d81b27b9b480fb075f2d96f64cd";
+    return "2ded0ab792e6fc382d669b9d328e650f";
   }
 
   static const char* value(const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xa2a82d81b27b9b48ULL;
-  static const uint64_t static_value2 = 0x0fb075f2d96f64cdULL;
+  static const uint64_t static_value1 = 0x2ded0ab792e6fc38ULL;
+  static const uint64_t static_value2 = 0x2d669b9d328e650fULL;
 };
 
 template<class ContainerAllocator>
@@ -148,11 +184,19 @@ struct Definition< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
   static const char* value()
   {
     return "LabelPoint[] points\n"
+"float32 px\n"
+"float32 py\n"
+"float32 pz\n"
+"float32 dx\n"
+"float32 dy\n"
+"float32 dz\n"
 "================================================================================\n"
 "MSG: gz_ray_label_plugin/LabelPoint\n"
 "float32 x\n"
 "float32 y\n"
 "float32 z\n"
+"int32 index\n"
+"float64 dist\n"
 "string entityName\n"
 ;
   }
@@ -173,6 +217,12 @@ namespace serialization
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
       stream.next(m.points);
+      stream.next(m.px);
+      stream.next(m.py);
+      stream.next(m.pz);
+      stream.next(m.dx);
+      stream.next(m.dy);
+      stream.next(m.dz);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -199,6 +249,18 @@ struct Printer< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
       s << indent;
       Printer< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >::stream(s, indent + "    ", v.points[i]);
     }
+    s << indent << "px: ";
+    Printer<float>::stream(s, indent + "  ", v.px);
+    s << indent << "py: ";
+    Printer<float>::stream(s, indent + "  ", v.py);
+    s << indent << "pz: ";
+    Printer<float>::stream(s, indent + "  ", v.pz);
+    s << indent << "dx: ";
+    Printer<float>::stream(s, indent + "  ", v.dx);
+    s << indent << "dy: ";
+    Printer<float>::stream(s, indent + "  ", v.dy);
+    s << indent << "dz: ";
+    Printer<float>::stream(s, indent + "  ", v.dz);
   }
 };
 

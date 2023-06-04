@@ -1,0 +1,8 @@
+prefix=/home/felix/catkin_ws/install
+
+Name: gz_freeze_objects
+Description: Description of gz_freeze_objects
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: message_runtime roscpp rospy std_msgs gazebo_msgs

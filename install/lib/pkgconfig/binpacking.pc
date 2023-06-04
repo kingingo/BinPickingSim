@@ -3,6 +3,6 @@ prefix=/home/felix/catkin_ws/install
 Name: binpacking
 Description: Description of binpacking
 Version: 0.0.0
-Cflags: -I${prefix}/include
+Cflags: 
 Libs: -L${prefix}/lib 
-Requires: roscpp rospy std_msgs gazebo_msgs message_runtime
+Requires: message_runtime roscpp rospy std_msgs gazebo_msgs

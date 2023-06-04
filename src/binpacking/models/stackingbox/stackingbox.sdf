@@ -4,7 +4,7 @@
   <model name ='stackingbox'>
     
     <static>true</static>
-    <self_collide>false</self_collide>
+    <self_collide>true</self_collide>
     <joint name='stackingbox_joint' type='fixed'>
       <parent>world</parent>
       <child>stackingbox_link</child>

@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="{model_name}">
+    <pose>0 0 0 0 0 0</pose>
+    <static>{static}</static>
+    <self_collide>1</self_collide>
+    {joint}
+    <link name="{model_name}_link">
+      <inertial>
+        <mass>0.1</mass>
+        <inertia> 
+          <ixx>3.8326771E-5</ixx>      
+          <ixy>-1.206750E-6</ixy>         
+          <ixz>1.435214E-6</ixz>         
+          <iyy>55.65332E-6</iyy>       
+          <iyz>0.457973E-6</iyz>         
+          <izz>55.197388E-6</izz>       
+        </inertia>
+      </inertial>
+      <collision name="plum_collision">
+          <geometry>
+            <mesh>
+              <uri>/home/felix/catkin_ws/src/binpacking/models/plum/meshes/plum.stl</uri>
+            </mesh>
+          </geometry>
+      </collision>
+      <visual name="plum_visual">
+        <material><script><name>Gazebo/{color}</name></script></material>
+        <geometry>
+          <mesh>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/plum/meshes/plum.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

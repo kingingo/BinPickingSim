@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="{model_name}">
+    <pose>0 0 0 0 0 0</pose>
+    <static>{static}</static>
+    <self_collide>1</self_collide>
+    {joint}
+    <link name="{model_name}_link">
+      <inertial>
+        <mass>0.1</mass>
+        <inertia> 
+          <ixx>-0.102110</ixx>      
+          <ixy>-0.9947</ixy>         
+          <ixz>0.012041</ixz>         
+          <iyy>0.01515</iyy>       
+          <iyz>0.999443</iyz>         
+          <izz>-0.031125</izz>       
+        </inertia>
+      </inertial>
+      <collision name="strawberry_collision">
+          <geometry>
+            <mesh>
+              <uri>/home/felix/catkin_ws/src/binpacking/models/strawberry/meshes/strawberry.stl</uri>
+            </mesh>
+          </geometry>
+      </collision>
+      <visual name="strawberry_visual">
+        <material><script><name>Gazebo/{color}</name></script></material>
+        <geometry>
+          <mesh>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/strawberry/meshes/strawberry.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

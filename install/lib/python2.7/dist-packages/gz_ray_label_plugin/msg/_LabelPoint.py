@@ -8,15 +8,17 @@ import struct
 
 
 class LabelPoint(genpy.Message):
-  _md5sum = "cb95b748ab6551f3b8cd89d3a8c541fc"
+  _md5sum = "783017e7320afc18fa76fea37e80ac42"
   _type = "gz_ray_label_plugin/LabelPoint"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """float32 x
 float32 y
 float32 z
+int32 index
+float64 dist
 string entityName"""
-  __slots__ = ['x','y','z','entityName']
-  _slot_types = ['float32','float32','float32','string']
+  __slots__ = ['x','y','z','index','dist','entityName']
+  _slot_types = ['float32','float32','float32','int32','float64','string']
 
   def __init__(self, *args, **kwds):
     """
@@ -26,7 +28,7 @@ string entityName"""
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       x,y,z,entityName
+       x,y,z,index,dist,entityName
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -41,12 +43,18 @@ string entityName"""
         self.y = 0.
       if self.z is None:
         self.z = 0.
+      if self.index is None:
+        self.index = 0
+      if self.dist is None:
+        self.dist = 0.
       if self.entityName is None:
         self.entityName = ''
     else:
       self.x = 0.
       self.y = 0.
       self.z = 0.
+      self.index = 0
+      self.dist = 0.
       self.entityName = ''
 
   def _get_types(self):
@@ -62,7 +70,7 @@ string entityName"""
     """
     try:
       _x = self
-      buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
+      buff.write(_get_struct_3fid().pack(_x.x, _x.y, _x.z, _x.index, _x.dist))
       _x = self.entityName
       length = len(_x)
       if python3 or type(_x) == unicode:
@@ -83,8 +91,8 @@ string entityName"""
       end = 0
       _x = self
       start = end
-      end += 12
-      (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
+      end += 24
+      (_x.x, _x.y, _x.z, _x.index, _x.dist,) = _get_struct_3fid().unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -107,7 +115,7 @@ string entityName"""
     """
     try:
       _x = self
-      buff.write(_get_struct_3f().pack(_x.x, _x.y, _x.z))
+      buff.write(_get_struct_3fid().pack(_x.x, _x.y, _x.z, _x.index, _x.dist))
       _x = self.entityName
       length = len(_x)
       if python3 or type(_x) == unicode:
@@ -129,8 +137,8 @@ string entityName"""
       end = 0
       _x = self
       start = end
-      end += 12
-      (_x.x, _x.y, _x.z,) = _get_struct_3f().unpack(str[start:end])
+      end += 24
+      (_x.x, _x.y, _x.z, _x.index, _x.dist,) = _get_struct_3fid().unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -148,9 +156,9 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
-_struct_3f = None
-def _get_struct_3f():
-    global _struct_3f
-    if _struct_3f is None:
-        _struct_3f = struct.Struct("<3f")
-    return _struct_3f
+_struct_3fid = None
+def _get_struct_3fid():
+    global _struct_3fid
+    if _struct_3fid is None:
+        _struct_3fid = struct.Struct("<3fid")
+    return _struct_3fid
