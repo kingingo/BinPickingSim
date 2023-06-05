@@ -76,31 +76,26 @@ class GZRayLabelPlugin : public WorldPlugin
         gazebo::physics::RayShapePtr ray;
         gazebo::physics::PhysicsEnginePtr engine;
         ignition::math::Vector3d start, end, scale;
-        
-        float scaling=0.3;
-        float start_z=0.5;
-        int rating=800;
-        //bool showMarker=false;
         int length = data.points.size();
 
-        /* RVIZ Ray visualization 
+        // RVIZ Ray visualization 
+        /*
         visualization_msgs::Marker line;
         geometry_msgs::Point line_end, line_start;
-        if(showMarker){
-            line.type = visualization_msgs::Marker::LINE_STRIP;
-            line.header.frame_id = "map";
-            line.ns = "ray_ns";
-            line.action = visualization_msgs::Marker::ADD;
-            line.pose.orientation.w = 1.0;
-            line.id = 0;
-            line.scale.x = 0.01;
-            line.scale.y = 0.01;
-            line.scale.z = 0.01;
-            //color red
-            line.color.r = 1.0;
-            line.color.a = 1.0;
-        }
+        line.type = visualization_msgs::Marker::LINE_STRIP;
+        line.header.frame_id = "map";
+        line.ns = "ray_ns";
+        line.action = visualization_msgs::Marker::ADD;
+        line.pose.orientation.w = 1.0;
+        line.id = 0;
+        line.scale.x = 0.01;
+        line.scale.y = 0.01;
+        line.scale.z = 0.01;
+        //color red
+        line.color.r = 1.0;
+        line.color.a = 1.0;
         */
+       
         #if GAZEBO_MAJOR_VERSION >= 8
             engine = world->Physics();
         #else
@@ -117,11 +112,10 @@ class GZRayLabelPlugin : public WorldPlugin
         int c = 1;
         int f = 0;
         int d = 0;
-        ros::Rate r(rating);
+        ros::Rate r(data.rating);
         length = data.points.size();
         d = length / 100;
         c = 1;
-        //engine->Reset();
         for(auto it = data.points.begin(); it != data.points.end(); it++){
             if(c % d == 0){
                 log(MAKE_STRING("found " << f << " Percent completed "  << ceil(c * 100.0 / length) << "%"));
@@ -133,37 +127,30 @@ class GZRayLabelPlugin : public WorldPlugin
 
             scale.X(0);
             scale.Y(0);
-            scale.Z(it->z - start_z);
-
-            /*
-            start.X(scale.X() * scaling);
-            start.Y(scale.Y() * scaling);
-            start.Z(start_z + scale.Z() * scaling);
-            */
+            scale.Z(it->z - data.start_z);
 
             start.X(it->x);
             start.Y(it->y);
-            start.Z(start_z);
+            start.Z(data.start_z);
 
-            end.X(it->x + scale.X() * scaling);
-            end.Y(it->y + scale.Y() * scaling);
-            end.Z(it->z + scale.Z() * scaling);
+            end.X(it->x + scale.X() * data.scaling);
+            end.Y(it->y + scale.Y() * data.scaling);
+            end.Z(it->z + scale.Z() * data.scaling);
             
             /*
-            if(showMarker){
-                line_start.x = it->x;
-                line_start.y = it->y;
-                line_start.z = start_z;
+            line_start.x = it->x;
+            line_start.y = it->y;
+            line_start.z = data.start_z;
 
-                line_end.x = it->x + scale.X() * scaling;
-                line_end.y = it->y + scale.Y() * scaling;
-                line_end.z = it->z + scale.Z() * scaling;
-                
-                line.points.clear();
-                line.points.push_back(line_start);
-                line.points.push_back(line_end);
-            }
+            line_end.x = it->x + scale.X() * data.scaling;
+            line_end.y = it->y + scale.Y() * data.scaling;
+            line_end.z = it->z + scale.Z() * data.scaling;
+            
+            line.points.clear();
+            line.points.push_back(line_start);
+            line.points.push_back(line_end);
             */
+
             ray->SetPoints(start, end);
             ray->GetIntersection(dist, entityName);
 
@@ -176,8 +163,9 @@ class GZRayLabelPlugin : public WorldPlugin
             }
             _data.points.push_back(_point);
             c++;
+            
             /*
-            if(showMarker){
+            if(data.showMarker){
                 marker_publisher.publish(line);
                 r.sleep();
             }
@@ -186,6 +174,7 @@ class GZRayLabelPlugin : public WorldPlugin
         ray.reset();
         publisher.publish(_data);
         log(MAKE_STRING("done scanning total found " << f));
+        _data.points.clear();
     }
 };
 GZ_REGISTER_WORLD_PLUGIN(GZRayLabelPlugin)

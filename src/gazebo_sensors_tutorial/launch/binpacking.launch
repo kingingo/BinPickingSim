@@ -21,15 +21,16 @@
 
   <param name="colors" command="$(find xacro)/xacro.py /home/felix/catkin_ws/src/binpacking/models/colors.urdf.xacro" />
 
-  <!-- Show in Rviz   
+  <!-- 
+  Kinect Cam    
   https://answers.gazebosim.org//question/4266/gazebo-15-libgazebo_openni_kinectso-pointcloud-data-is-rotated-and-flipped/
   -->
   <node pkg="tf" type="static_transform_publisher" name="correct_kinect_frame" args="0 0 0 4.71238898038469 0.0 4.71238898038469 depth_camera_link kinect_optical_link 10"/>  
   <node pkg="tf2_ros" type="static_transform_publisher" name="world_broadcaster" args="0.0 0.0 1.9 0.0 1.5707963267948966 0.0 map depth_camera_link" /> 
  
-  <!-- Show in Rviz  
+  <!-- Show in Rviz  --> 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sensors_tutorial)/config/kinect_coke.rviz"/> 
-  --> 
+  
   <node name="binpacking" pkg="binpacking" type="binpacking.py" output="screen">
       <param name='checkpoint' value="$(arg checkpoint)"/>
   </node>

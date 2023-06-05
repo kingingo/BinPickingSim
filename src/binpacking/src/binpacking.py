@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import os
+import sys
 import rospy
 import random
 import numpy as np
@@ -52,9 +53,7 @@ path = None
 color_labeling = False
 reset_gz_world = None
 camera_frame = ''
-bbox_px = [-0.30, 0.30]
-bbox_py = [-0.45,0.45]
-bbox_pz = [0.3, 0.5]
+boundingbox = []
 color_codes = {
   'Yellow': "255 225 20",
   'Red': "229 0 0",
@@ -594,12 +593,13 @@ def subscribe_to_camera():
   clear_all_forces()
   #subscribe to camera 
   received_points = False
+  rospy.sleep(0.5)
   sub = rospy.Subscriber("/camera/depth/points", PointCloud2, camera_subscribe_callback)
+  rospy.sleep(0.5)
   log("waiting for incoming points")
   while True:
-    rospy.sleep(0.1)
+    rospy.sleep(0.5)
     if received_points:
-
       if len(rgbpoint) > 0:
         rgb = float_to_rgb(rgbpoint[0])
 
@@ -768,8 +768,8 @@ def filter_points_by_colours():
   rgbpoint = _rgbpoint
 
 
-def filter_points(x_min = 0, x_max = 0, y_min = 0, y_max = 0):
-  global xpoint, ypoint, zpoint, rgbpoint, labelpoint, clabelpoint, bbox_px, bbox_py, worldpoints
+def filter_points_by_boundingbox():
+  global xpoint, ypoint, zpoint, rgbpoint, labelpoint, clabelpoint, boundingbox, worldpoints
   _xpoint = []
   _ypoint = []
   _zpoint = []
@@ -789,7 +789,7 @@ def filter_points(x_min = 0, x_max = 0, y_min = 0, y_max = 0):
     wy = worldpoints[i][1]
     wz = worldpoints[i][2]
 
-    if x_min < wx and x_max > wx and y_min < wy and y_max > wy:
+    if boundingbox['x']['min'] < wx and boundingbox['x']['max'] > wx and boundingbox['y']['min'] < wy and boundingbox['y']['max'] > wy:
       _xpoint.append(x)
       _ypoint.append(y)
       _zpoint.append(z)
@@ -853,12 +853,15 @@ def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static
   xml = open(package_path + '/models/'+path+file_name+'.sdf', 'r').read()
 
   found = False
-  for i in range(len(object_color_codes)):
-    obj = object_color_codes[i]
+  if catId >= 0:
+    for i in range(len(object_color_codes)):
+      obj = object_color_codes[i]
 
-    if obj['name'] == model_name:
-      found = True
-      break
+      if obj['name'] == model_name:
+        found = True
+        break
+  else:
+    found = True
   
   if not found:
     rgb = color_codes[color].strip().split(' ')
@@ -896,8 +899,8 @@ def send_world_frame(x, y, z,frame_id = "ray_frame", child_frame = "map", roll =
   tf_broadcaster.sendTransform(world_transform)
   log("created transformation between from {} to {} (parent->child)".format(frame_id, child_frame))
 
-def spawn_objects(xmls, is_sdf = True, start_id = 0):
-  global bbox_px, bbox_py, bbox_pz
+def spawn_objects(xmls, is_sdf = True, start_id = 0, dx = 0, dy = 0, dz = 0):
+  global boundingbox
   #xmls = ['banana':xml]
   #settings = [{'name':'banana', 'catId':2}]
   settings = []
@@ -914,19 +917,12 @@ def spawn_objects(xmls, is_sdf = True, start_id = 0):
     id = xmls[i]['counter']
     xmls[i]['counter']=xmls[i]['counter']+1
 
-    px = random.uniform(bbox_px[0]+0.1, bbox_px[1]-0.1)
-    py = random.uniform(bbox_py[0]+0.1, bbox_py[1]-0.1)
-    pz = random.uniform(bbox_pz[0], bbox_pz[1])
+    px = random.uniform(boundingbox['x']['min'] + dx, boundingbox['x']['max'] - dx)
+    py = random.uniform(boundingbox['y']['min'] + dy, boundingbox['y']['max'] - dy)
+    pz = random.uniform(boundingbox['z']['min'] + dz, boundingbox['z']['max'] - dz)
 
     model_name = '{}_{}_{}'.format(catId,start_id+id+2,name)
     spawn_xml(model_name, xml, px, py, pz, is_sdf, 0)
-
-def calc_distance(x = 0,y = 0,z = 1.8, bx = 0, by = 0, bz = 0):
-  camera_pos = np.array([x,y,z])
-  box_pos = np.array([bx,by,bz])
-  camera_to_target = box_pos - camera_pos
-
-  return math.sqrt(math.pow(camera_to_target[0],2) + math.pow(camera_to_target[1], 2) + math.pow(camera_to_target[2], 2))
 
 def calc_camera_location(x = 0,y = 0,z = 1.9, bx = 0, by = 0, bz = 0):
   camera_pos = np.array([x,y,z])
@@ -1150,6 +1146,62 @@ def freeze():
 
   freeze_pub.publish(msg)
 
+def measureBoxSize():
+  global xpoint, ypoint, zpoint, boundingbox
+
+  log("measure box size...")
+  subscribe_to_camera()
+  filter_points_by_colours()
+
+  boundingbox = {
+    'x': {'min': sys.float_info.max, 'max':sys.float_info.min},
+    'y': {'min': sys.float_info.max, 'max':sys.float_info.min},
+    'z': {'min': sys.float_info.max, 'max':sys.float_info.min},
+  }
+  
+  for i in range(len(xpoint)):
+    x = xpoint[i]
+    y = ypoint[i]
+    z = zpoint[i]
+
+    if boundingbox['x']['min'] > x:
+      boundingbox['x']['min'] = x
+    elif boundingbox['x']['max'] < x:
+      boundingbox['x']['max'] = x
+
+    if boundingbox['y']['min'] > y:
+      boundingbox['y']['min'] = y
+    elif boundingbox['y']['max'] < y:
+      boundingbox['y']['max'] = y
+
+    if boundingbox['z']['min'] > z:
+      boundingbox['z']['min'] = z
+    elif boundingbox['z']['max'] < z:
+      boundingbox['z']['max'] = z
+
+  _maxx, _maxy, _maxz = transform_cp_to_wp(boundingbox['x']['min'],boundingbox['y']['min'],boundingbox['z']['min'])
+  _minx, _miny, _minz = transform_cp_to_wp(boundingbox['x']['max'],boundingbox['y']['max'],boundingbox['z']['max'])
+
+  boundingbox['x']['min'] = _minx
+  boundingbox['y']['min'] = _miny
+  boundingbox['z']['min'] = _minz
+  boundingbox['x']['max'] = _maxx
+  boundingbox['y']['max'] = _maxy
+  boundingbox['z']['max'] = _maxz
+
+  for axis in boundingbox:
+    log("axis:{} min:{} max:{}".format(axis, boundingbox[axis]['min'], boundingbox[axis]['max']))
+  reset_world()
+  log("boundingbox measured.")
+  '''
+  xml = get_xml('box', '/box/', 'box', 'Red', catId=-1)
+  spawn_xml('xmin_ymin_box', xml, px = boundingbox['x']['min'], py = boundingbox['y']['min'], pz = boundingbox['z']['max'])
+  spawn_xml('xmin_ymax_box', xml, px = boundingbox['x']['min'], py = boundingbox['y']['max'], pz = boundingbox['z']['max'])
+  spawn_xml('xmax_ymin_box', xml, px = boundingbox['x']['max'], py = boundingbox['y']['min'], pz = boundingbox['z']['max'])
+  spawn_xml('xmax_ymax_box', xml, px = boundingbox['x']['max'], py = boundingbox['y']['max'], pz = boundingbox['z']['max'])
+  rospy.spin()
+  '''
+
 if __name__ == '__main__':
   global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state
 
@@ -1205,6 +1257,8 @@ if __name__ == '__main__':
   tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
   world_frame_name = 'map' #ray_frame
   #send_world_frame(0, 0, 0, rx=-0.499999999463, ry=0.499999999463,rz=-0.499976836603, rw=0.500023163397)
+  #get bounding box
+  measureBoxSize()
 
   if type(jump_to_checkpoint) == list:
     log("load object for checkpoint")
@@ -1249,7 +1303,7 @@ if __name__ == '__main__':
       {'name':'plum','catId':6, 'xml':plum_xml, 'amount':5 + random.randint(5,15)}
     ]
     #spawn objects in box
-    spawn_objects(xmls)
+    spawn_objects(xmls, dx = 0.05, dy = 0.05, dz = 0.01)
     #spawn_xml('3_apple', apple_xml, px = 0, py = 0, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
     #spawn_xml('2_banana', banana_xml, px = 0.2, py = 0.1, pz = 0, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
     log("wait {} seconds".format(sleeptime))
@@ -1261,11 +1315,11 @@ if __name__ == '__main__':
     write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
     filter_points_by_colours()
     transform_points()
-    #filter_points(bbox_px[0]+0.02,bbox_px[1]+0.2, bbox_py[0]-0.2, bbox_py[1]+0.2)
     save_checkpoint()
     write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False, world_points=True) 
     write_pointcloud(reset = False, prefix = '2_', colored_file= False, with_label= False) 
     #sample_down_pointcloud()
+    filter_points_by_boundingbox()
     convert_rgb()
     label_points_by_ray()
     fill_color_label()

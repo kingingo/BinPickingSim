@@ -4,11 +4,13 @@
   <model name ='stackingbox'>
     
     <static>true</static>
+    
     <self_collide>true</self_collide>
     <joint name='stackingbox_joint' type='fixed'>
       <parent>world</parent>
       <child>stackingbox_link</child>
     </joint>
+    
     <link name ='stackingbox_link'> 
       <inertial>
         <mass>10</mass>
@@ -40,13 +42,6 @@
         </geometry>
         <material><script><name>Gazebo/{color}</name></script></material>
       </visual>
-      <!--
-      <sensor name='my_contact' type='contact'>
-        <contact>
-          <collision>box_collision</collision>
-        </contact>
-      </sensor>
-      -->
      </link>
   </model>
 </sdf>

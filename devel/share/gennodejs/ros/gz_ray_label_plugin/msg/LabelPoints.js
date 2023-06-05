@@ -71,13 +71,17 @@ class LabelPoints {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '9238b1dd4884b2c9c5ea319c5eeba180';
+    return 'e1d608c65b59cb3a4394938a3c20d7fa';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
     LabelPoint[] points
+    float32 scaling = 0.3
+    float32 start_z = 0.5
+    int32 rating = 800
+    bool showMarker = 0
     ================================================================================
     MSG: gz_ray_label_plugin/LabelPoint
     float32 x
@@ -108,5 +112,13 @@ class LabelPoints {
     return resolved;
     }
 };
+
+// Constants for message
+LabelPoints.Constants = {
+  SCALING: 0.3,
+  START_Z: 0.5,
+  RATING: 800,
+  SHOWMARKER: false,
+}
 
 module.exports = LabelPoints;

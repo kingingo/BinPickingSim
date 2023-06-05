@@ -33,13 +33,6 @@
           </mesh>
         </geometry>
       </visual>
-      <!--
-      <sensor name='my_contact' type='contact'>
-        <contact>
-          <collision>orange_collision</collision>
-        </contact>
-      </sensor>
-      -->
     </link>
   </model>
 </sdf>
