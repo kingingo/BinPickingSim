@@ -77,9 +77,9 @@ class GZRayLabelPlugin : public WorldPlugin
         gazebo::physics::PhysicsEnginePtr engine;
         ignition::math::Vector3d start, end, scale;
         int length = data.points.size();
+        bool showMarker = true;
 
         // RVIZ Ray visualization 
-        /*
         visualization_msgs::Marker line;
         geometry_msgs::Point line_end, line_start;
         line.type = visualization_msgs::Marker::LINE_STRIP;
@@ -94,8 +94,8 @@ class GZRayLabelPlugin : public WorldPlugin
         //color red
         line.color.r = 1.0;
         line.color.a = 1.0;
-        */
-       
+        
+
         #if GAZEBO_MAJOR_VERSION >= 8
             engine = world->Physics();
         #else
@@ -112,7 +112,7 @@ class GZRayLabelPlugin : public WorldPlugin
         int c = 1;
         int f = 0;
         int d = 0;
-        ros::Rate r(data.rating);
+        //ros::Rate r(2000);
         length = data.points.size();
         d = length / 100;
         c = 1;
@@ -136,20 +136,6 @@ class GZRayLabelPlugin : public WorldPlugin
             end.X(it->x + scale.X() * data.scaling);
             end.Y(it->y + scale.Y() * data.scaling);
             end.Z(it->z + scale.Z() * data.scaling);
-            
-            /*
-            line_start.x = it->x;
-            line_start.y = it->y;
-            line_start.z = data.start_z;
-
-            line_end.x = it->x + scale.X() * data.scaling;
-            line_end.y = it->y + scale.Y() * data.scaling;
-            line_end.z = it->z + scale.Z() * data.scaling;
-            
-            line.points.clear();
-            line.points.push_back(line_start);
-            line.points.push_back(line_end);
-            */
 
             ray->SetPoints(start, end);
             ray->GetIntersection(dist, entityName);
@@ -164,12 +150,22 @@ class GZRayLabelPlugin : public WorldPlugin
             _data.points.push_back(_point);
             c++;
             
-            /*
-            if(data.showMarker){
+            line_start.x = it->x;
+            line_start.y = it->y;
+            line_start.z = data.start_z;
+
+            line_end.x = it->x + scale.X() * data.scaling;
+            line_end.y = it->y + scale.Y() * data.scaling;
+            line_end.z = it->z + scale.Z() * data.scaling;
+            
+            line.points.clear();
+            line.points.push_back(line_start);
+            line.points.push_back(line_end);
+
+            if(showMarker){
                 marker_publisher.publish(line);
-                r.sleep();
+                //r.sleep();
             }
-            */
         }
         ray.reset();
         publisher.publish(_data);

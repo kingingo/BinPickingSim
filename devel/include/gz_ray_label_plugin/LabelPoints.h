@@ -77,7 +77,7 @@ typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints const> LabelPoints
    template<typename ContainerAllocator> const float
       LabelPoints_<ContainerAllocator>::scaling =
         
-          0.3
+          0.15
         
         ;
    
@@ -172,12 +172,12 @@ struct MD5Sum< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "e1d608c65b59cb3a4394938a3c20d7fa";
+    return "8df55850541ba2b90a87120a4b1cc925";
   }
 
   static const char* value(const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xe1d608c65b59cb3aULL;
-  static const uint64_t static_value2 = 0x4394938a3c20d7faULL;
+  static const uint64_t static_value1 = 0x8df55850541ba2b9ULL;
+  static const uint64_t static_value2 = 0x0a87120a4b1cc925ULL;
 };
 
 template<class ContainerAllocator>
@@ -197,7 +197,7 @@ struct Definition< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
   static const char* value()
   {
     return "LabelPoint[] points\n"
-"float32 scaling = 0.3\n"
+"float32 scaling = 0.15\n"
 "float32 start_z = 0.5\n"
 "int32 rating = 800\n"
 "bool showMarker = 0\n"

@@ -71,14 +71,14 @@ class LabelPoints {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'e1d608c65b59cb3a4394938a3c20d7fa';
+    return '8df55850541ba2b90a87120a4b1cc925';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
     LabelPoint[] points
-    float32 scaling = 0.3
+    float32 scaling = 0.15
     float32 start_z = 0.5
     int32 rating = 800
     bool showMarker = 0
@@ -115,7 +115,7 @@ class LabelPoints {
 
 // Constants for message
 LabelPoints.Constants = {
-  SCALING: 0.3,
+  SCALING: 0.15,
   START_Z: 0.5,
   RATING: 800,
   SHOWMARKER: false,

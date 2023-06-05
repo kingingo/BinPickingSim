@@ -54,15 +54,18 @@ if __name__ == '__main__':
     sub = rospy.Subscriber("freeze", FreezeModels, freeze_callback)
 
     log("GZ freeze models loaded")
-    rate = rospy.Rate(100)
+    rate = rospy.Rate(1000)
     while not rospy.is_shutdown():
         if freezed_models:
           for i in range(len(freezed_models)):
-            data = freezed_models[i]
             try:
-              pub.publish(data['state'])
-            except:
-              print("An exception occurred")
-              freezed_models.remove(data)
+              data = freezed_models[i]
+              try:
+                pub.publish(data['state'])
+              except:
+                print("An exception occurred")
+                freezed_models.remove(data)
+            except IndexError as e:
+              break
         rate.sleep()
               

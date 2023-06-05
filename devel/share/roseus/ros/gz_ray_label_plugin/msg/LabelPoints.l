@@ -14,7 +14,7 @@
 
 (intern "*SCALING*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
 (shadow '*SCALING* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
-(defconstant gz_ray_label_plugin::LabelPoints::*SCALING* 0.3)
+(defconstant gz_ray_label_plugin::LabelPoints::*SCALING* 0.15)
 (intern "*START_Z*" (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
 (shadow '*START_Z* (find-package "GZ_RAY_LABEL_PLUGIN::LABELPOINTS"))
 (defconstant gz_ray_label_plugin::LabelPoints::*START_Z* 0.5)
@@ -73,11 +73,11 @@
    self)
   )
 
-(setf (get gz_ray_label_plugin::LabelPoints :md5sum-) "e1d608c65b59cb3a4394938a3c20d7fa")
+(setf (get gz_ray_label_plugin::LabelPoints :md5sum-) "8df55850541ba2b90a87120a4b1cc925")
 (setf (get gz_ray_label_plugin::LabelPoints :datatype-) "gz_ray_label_plugin/LabelPoints")
 (setf (get gz_ray_label_plugin::LabelPoints :definition-)
       "LabelPoint[] points
-float32 scaling = 0.3
+float32 scaling = 0.15
 float32 start_z = 0.5
 int32 rating = 800
 bool showMarker = 0
@@ -93,6 +93,6 @@ string entityName
 
 
 
-(provide :gz_ray_label_plugin/LabelPoints "e1d608c65b59cb3a4394938a3c20d7fa")
+(provide :gz_ray_label_plugin/LabelPoints "8df55850541ba2b90a87120a4b1cc925")
 
 
