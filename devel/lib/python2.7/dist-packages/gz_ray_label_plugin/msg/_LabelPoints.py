@@ -9,11 +9,11 @@ import struct
 import gz_ray_label_plugin.msg
 
 class LabelPoints(genpy.Message):
-  _md5sum = "8df55850541ba2b90a87120a4b1cc925"
+  _md5sum = "8347644e8dcf1da2f7bcbc3665d4c78e"
   _type = "gz_ray_label_plugin/LabelPoints"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """LabelPoint[] points
-float32 scaling = 0.15
+float32 scaling = 0.05
 float32 start_z = 0.5
 int32 rating = 800
 bool showMarker = 0
@@ -26,7 +26,7 @@ int32 index
 float64 dist
 string entityName"""
   # Pseudo-constants
-  scaling = 0.15
+  scaling = 0.05
   start_z = 0.5
   rating = 800
   showMarker = False

@@ -32,6 +32,7 @@ catkin_path = '/home/felix/catkin_ws'
 package_path = catkin_path+'/src/binpacking/'
 received_points_ray = False
 received_points = False
+received_points_counter = 0
 world_frame_name = 'map'
 xpoint = []
 ypoint = []
@@ -159,79 +160,29 @@ def camera_set_pose(px = 0, py = 0, pz = 1.9, roll = 0, pitch = 1.61, yaw = 0):
       log("service call failed: " + e)
 
 def camera_subscribe_callback(data):
-  global camera_frame, received_points
+  global camera_frame, received_points_counter, received_points
   assert isinstance(data, PointCloud2)
-  if received_points:
+  #if not received_points:
+  if received_points_counter <= 0 or received_points:
+    return
+
+  received_points_counter -= 1
+  if received_points_counter > 0:
     return
 
   camera_frame = data.header.frame_id
-  """
-  cloud = ros_to_pcl(data)
-
-  # Filter the point cloud to remove NaNs and outliers
-  cloud = o3d.geometry.voxel_downsample(cloud, 0.01)
-  cloud = o3d.geometry.passthrough_filter(cloud, 'z', 0.1, 5.0)
-  cloud = o3d.geometry.statistical_outlier_filter(cloud)
-  cloud = o3d.geometry.radius_outlier_filter(cloud, 0.05, 10)
-
-  for field in data.fields:
-    log("fieldname {} {} ".format(field.name, field.datatype))
-  """
-  """
-  points_rgb = point_cloud2.read_points(data, skip_nans=True, field_names=("x", "y", "z", "rgb"))
-
-  # Convert ROS point cloud message to numpy array
-  pc = np.array(list(points_rgb))
-
-  # Convert numpy array to Open3D point cloud object
-  pcd = o3d.geometry.PointCloud()
-  pcd.points = o3d.utility.Vector3dVector(pc[:, 0:3])
-
-  rgb_float = np.asarray(pc[:, 3], dtype=np.float32)
-  pcd.colors = o3d.utility.Vector3dVector(np.asarray(np.vstack((rgb_float, rgb_float, rgb_float)).T))
-
-  # Voxel downsampling
-  #
-  downsampled_pcd = pcd.voxel_down_sample(voxel_size=0.05)
-  
-  # Statistical outlier removal
-  #cl, ind = downsampled_pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
-
-  # Remove the outlier points from the downsampled point cloud
-  #filtered_pcd = downsampled_pcd.select_down_sample(ind)
-
-  #filtered_pc2 = pc2.create_cloud_xyzrgbcreate_cloud_xyz32(data.header, np.asarray(filtered_pcd.points), np.asarray(filtered_pcd.colors) * 255.0)
-  vol = len(pcd.points)
-
-  for i in range(vol):
-     point = pcd.points[i]
-     color = pcd.colors[i][0]
-
-     rgb = float32_to_rgb(color)
-     rgbpoint.append(rgb)
-     xpoint.append(point[0])
-     ypoint.append(point[1])
-     zpoint.append(point[2])
-     #log("x/y/z: {}/{}/{} {}/{}/{}".format(point[0],point[1],point[2],rgb[0],rgb[1],rgb[2]))
-  """
   points = point_cloud2.read_points(data, field_names=("x", "y", "z", "rgb"), skip_nans=True) 
 
   for point in points:
-    x = point[0]
-    y = point[1]
-    z = point[2]
-
+    xpoint.append(point[0])
+    ypoint.append(point[1])
+    zpoint.append(point[2])
     rgbpoint.append(point[3])
-    xpoint.append(x)
-    ypoint.append(y)
-    zpoint.append(z)
-
     clabelpoint.append(0)
     labelpoint.append(0)
 
-    #log("x/y/z: {}/{}/{} rgb:{}/{}/{}".format(x,y,z,rgb[0], rgb[1], rgb[2]))
-  received_points = True
   log("camera_subscribe_callback got data from frame {}".format(camera_frame))
+  received_points=True
 
 def get_model_color(modelname):
   global object_color_codes
@@ -262,12 +213,7 @@ def fill_color_label():
           
 def get_pose(object):
   state = get_state(object, '')
-
   return state.pose
-
-def stop_moving(object):
-  set_pose(object, ax = 0, ay = 0, az = 0, lx = 0, ly = 0, lz = 0)
-  log("stop moving {}".format(object))
 
 def set_pose(object, x = None, y = None, z = None, qx = None, qy = None, qz = None, qw = None, ax = None, ay = None, az = None, lx = None, ly = None, lz = None):
   model_state = ModelState()
@@ -304,127 +250,6 @@ def set_pose(object, x = None, y = None, z = None, qx = None, qy = None, qz = No
     model_state.pose.orientation.w = 0.0
 
   set_state(model_state)
-
-
-def respawn_objects(_static = True):
-  global spawned_objects
-  objs = []
-
-  log("log object locations")
-  for obj in spawned_objects:
-    pose = get_pose(obj)
-    pos = pose.position
-    orientation = pose.orientation
-    twist = pose.twist
-    objs.append( 
-      {'name':obj, 
-       'x': pos.x, 
-       'y': pos.y, 
-       'z': pos.z, 
-       'qx': orientation.x, 
-       'qy': orientation.y, 
-       'qz': orientation.x, 
-       'qw': orientation.w
-       } 
-    )
-    log('object {} loaded'.format(obj))
-
-  delete_spawned_objects()
-  for data in objs:
-    obj = data['name']
-    px = data['x']
-    py = data['y']
-    pz = data['z']
-    qx = data['qx']
-    qy = data['qy']
-    qz = data['qz']
-    qw = data['qw']
-
-    str_split = obj.split("_")
-    model = str_split[len(str_split)-1]
-    model = model.lower()
-
-    color = get_model_color(model)
-    xml = get_xml(obj, '/'+model+'/', model, color, static = _static)
-    spawn_xml(obj, xml, is_sdf = True)
-    spawned_objects.append(obj)
-    set_pose(obj, x=px, y=py, z = pz, qx = qx, qy = qy, qz = qz, qw = qw)
-    log('{} respawned'.format(obj))
-
-def get_index_from_point(name1, name2):
-  id = 0
-  if 'point' in name1:
-    id = int(name1.split("_")[0])
-  else:
-    id = int(name2.split("_")[0])
-
-  return id
-
-def collision_callback(contacts):
-  global point_index, labelpoint, point_index_list, world_chunks_size, world_chunks_diff
-  use_point_index = True
-
-  if point_index_list is not None:
-    use_point_index = False
-
-  try:
-    #Is it already labeled?
-    if use_point_index:
-      if labelpoint[point_index] > 0:
-        return
-  except IndexError as e:
-      print("point_index={}, len(labelpoint)={} {}".format(point_index, len(labelpoint), e))
-      return
-
-  states = contacts.states
-
-  for state in states:
-    #if state.collision1_name and state.collision2_name:
-    #    log("collision {} - {}".format(state.collision1_name, state.collision2_name))
-
-    if 'point' in state.collision1_name or 'point' in state.collision2_name:
-      if not use_point_index:
-        list_index = get_index_from_point(state.collision1_name, state.collision2_name ) 
-        
-        if point_index_list[list_index] == -1:
-          return
-        
-        length = len(point_index_list)-1
-        if length == list_index and (length - world_chunks_diff) <= point_index_list[list_index]:
-          return
-
-        label_index = (list_index * world_chunks_size) + point_index_list[list_index]
-
-      #log("collision {} - {}".format(state.collision1_name, state.collision2_name))
-      if not state.collision1_name == 'ground_plane::link::collision' and not state.collision2_name == 'ground_plane::link::collision':
-        if state.collision1_name.startswith('stackingbox') or state.collision2_name.startswith('stackingbox'):
-          if use_point_index:
-            labelpoint[point_index] = 1
-          else:
-            labelpoint[label_index] = 1
-          #log("labeled index={} stackingbox".format(point_index))
-        else:
-          id = 0
-          if 'point' in state.collision2_name:
-            id = int(state.collision1_name.split("_")[0])
-          else:
-            id = int(state.collision2_name.split("_")[0])
-
-          if use_point_index:
-            labelpoint[point_index] = id
-          else:
-            labelpoint[label_index] = id
-          #log("labeled index={} id={}".format(point_index, id))
-
-def test_collide(object, index, x,y,z, sleeptime = 0.001, set_point_index = True):
-  global point_index
-
-  if set_point_index:
-    point_index = index
-  set_pose(object, x, y, z)
-
-  if sleeptime > 0:
-    rospy.sleep(sleeptime)
 
 def load_checkpoint(_path):
   global xpoint, ypoint, zpoint, worldpoints, labelpoint, rgbpoint, path, clabelpoint
@@ -468,143 +293,25 @@ def save_checkpoint():
   pickle.dump(checkpoint, open(get_path() + "/checkpoint.p", 'wb'))
   log("checkpoint saved to {}".format(get_path()))
 
-"""
-Alle Listen werden auf world_chunks_size erhoeht
-eigentlich wird nur die letzte liste erhoeht
-"""
-def even_chunks_list(world_chunks):
-  global world_chunks_size, world_chunks_diff
-
-  max(world_chunks)
-  for i in range(len(world_chunks)):
-    length = len(world_chunks[i])
-
-    if length < world_chunks_size:
-      world_chunks_diff = (world_chunks_size - length)
-      for j in range( (world_chunks_size - length) ):
-        world_chunks[i].append(None)
-
-def chunkIt(seq, num = 10):
-    avg = math.ceil(len(seq) / float(num))
-    out = []
-    last = 0.0
-
-    while last < len(seq):
-        out.append(seq[int(last):int(last + avg)])
-        last += avg
-
-    return out
-
-def max(world_chunks):
-  global world_chunks_size
-
-  for i in range(len(world_chunks)):
-    length = len(world_chunks[i])
-    if world_chunks_size is None:
-      world_chunks_size = length
-    else:
-      if world_chunks_size < length:
-        world_chunks_size = length
-  
-  log("world_chunks_size({})".format(world_chunks_size))
-
-def track_collisions():
-  global point_index_list, worldpoints, clabelpoint
-  #respawn objects to static so that they dont move by collisions
-  #pause_physics(EmptyRequest())
-  clear_all_forces()
-  log("subscribe physics/contacts for collisions")
-  sub = rospy.Subscriber("contacts", ContactsState, collision_callback)
-  log("start points")
-
-  point_amount = 10
-  world_chunks = chunkIt(worldpoints, point_amount)
-  even_chunks_list(world_chunks)
-  point_index_list = [0] * len(world_chunks)
-
-  log("world_chunks({})".format(len(world_chunks)))
-  log("point_index_list({})".format(len(point_index_list)))
-  for i in range(len(world_chunks)):
-    spawn_xml('{}_point'.format(i), collision_point_sdf(),1, 1, 1, True, 0)
-
-  done = False
-  world_size = len(world_chunks[0])
-  while not done:
-    for i in range(len(world_chunks)):
-      point_index = point_index_list[i]
-
-      if point_index == -1:
-        continue
-
-      if len(world_chunks[i]) <= point_index or world_chunks[i][point_index] is None:
-        point_index_list[i] = -1
-        continue
-
-      point_index_list[i]+=1
-
-      x = world_chunks[i][point_index][0]
-      y = world_chunks[i][point_index][1]
-      z = world_chunks[i][point_index][2]
-
-      original_index = (i * world_size) + point_index
-      #if clabelpoint[original_index] == 0:
-      #  continue
-
-      if (point_index % 500) == 0:
-        log("process-{}: {}/{}".format(i,point_index,len(world_chunks[i])))
-
-      test_collide("{}_point".format(i), point_index, x, y, z, 0, False)
-    rospy.sleep(0.005)
-
-    done = True
-    for i in range(len(point_index_list)):
-      if point_index_list[i] > -1:
-        done = False
-        break
-
-  
-  for i in range(len(world_chunks)):
-    log("delete {}. {}".format(i, point_index_list[i]))
-    delete_object('{}_point'.format(i))
-  """
-
-  spawn_xml('point', collision_point_sdf(),1, 1, 1, True)
-  volume = len(worldpoints)
-  point_index_list = None
-  for i in range(volume):
-    if (i % 500) == 0:
-      log("process: {}/{}".format(i,volume))
-
-    x = worldpoints[i][0]
-    y = worldpoints[i][1]
-    z = worldpoints[i][2]
-
-    #if clabelpoint[i] == 0:
-    #  continue
-
-    test_collide('point', i, x, y, z, 0.01)
-  delete_object('point')
-  """
-
-  sub.unregister()
-
-def subscribe_to_camera():
-  global received_points,rgbpoint
+def subscribe_to_camera(skip_data = 4):
+  global received_points_counter, rgbpoint, received_points
   clear_all_forces()
   #subscribe to camera 
+  received_points_counter = skip_data
   received_points = False
+  
   rospy.sleep(0.5)
   sub = rospy.Subscriber("/camera/depth/points", PointCloud2, camera_subscribe_callback)
-  rospy.sleep(0.5)
   log("waiting for incoming points")
   while True:
     rospy.sleep(0.5)
-    if received_points:
+    if received_points and received_points_counter <= 0:
       if len(rgbpoint) > 0:
         rgb = float_to_rgb(rgbpoint[0])
 
         if rgb[0] == 0 and rgb[1] == 0 and rgb[2] == 0:
           reset_world()
+          received_points_counter = skip_data
           received_points = False
           log("RGB all black so take points again :)")
           continue
@@ -643,7 +350,13 @@ def reset_world():
   del labelpoint[:]
   clear_path()
 
-def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = True, with_label = True, RGB = True, world_points = False):
+def get_label_color(label):
+  for data in object_color_codes:
+    if data['catId'] == int(label):
+      return data['r'], data['g'], data['b']
+  return 0, 0, 0
+
+def write_pointcloud(format = 'ply', reset = True, prefix = '', color_by_label = False, with_label = True, RGB = True, world_points = False):
   global xpoint, ypoint, zpoint, labelpoint, clabelpoint, worldpoints
 
   if not (format is 'ply' or format is 'txt'):
@@ -716,6 +429,9 @@ def write_pointcloud(format = 'ply', reset = True, prefix = '', colored_file = T
 
     if format is 'ply':
       clabel = clabelpoint[i]
+
+      if color_by_label:
+        r, g, b = get_label_color(label)
 
       if with_label:
         fid.write('{} {} {} {} {} {} {} {}\n'.format(x,y,z,r,g,b,label,clabel))
@@ -809,7 +525,8 @@ def filter_points_by_boundingbox():
 def delete_object(obj):
     global delete_model
     try:
-        delete_model(str(obj))
+      log("delete obj {}".format(obj))
+      delete_model(str(obj))
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: " + str(e))
 
@@ -830,7 +547,6 @@ def get_label(r,g,b):
 
 def delete_spawned_objects():
   for obj in spawned_objects:
-    log("delete obj {}".format(obj))
     delete_object(obj)
   #clear list
   del spawned_objects[:]
@@ -1090,6 +806,8 @@ def label_points_by_ray():
   pub = rospy.Publisher('/ray/points', LabelPoints, queue_size = 10)
   sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
   cloud = LabelPoints()
+  cloud.scaling = 0.03
+
   length = len(worldpoints)
   for i in range(length):
     point = LabelPoint()
@@ -1202,6 +920,23 @@ def measureBoxSize():
   rospy.spin()
   '''
 
+def remove_falling_out_obj():
+  global boundingbox
+  
+  remove = []
+  for obj in spawned_objects:
+    pose = get_pose(obj)
+
+    if boundingbox['x']['min'] > pose.position.x \
+      or boundingbox['x']['max'] < pose.position.x \
+      or boundingbox['y']['min'] > pose.position.y \
+      or boundingbox['y']['max'] < pose.position.y:
+      remove.append(obj)
+
+  for obj in remove:
+    delete_object(obj)
+    spawned_objects.remove(obj)
+
 if __name__ == '__main__':
   global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state
 
@@ -1309,15 +1044,17 @@ if __name__ == '__main__':
     log("wait {} seconds".format(sleeptime))
     rospy_sleep(sleeptime)
     log("done sleeping lets start")
+    remove_falling_out_obj()
     freeze()
+    rospy_sleep(0.5)
     #subscribe to camera and gather pointsg
     subscribe_to_camera()
-    write_pointcloud(reset = False, prefix = '0_', colored_file= False, with_label= False) 
+    write_pointcloud(reset = False, prefix = '0_', with_label= False) 
     filter_points_by_colours()
     transform_points()
     save_checkpoint()
-    write_pointcloud(reset = False, prefix = '1_', colored_file= False, with_label= False, world_points=True) 
-    write_pointcloud(reset = False, prefix = '2_', colored_file= False, with_label= False) 
+    write_pointcloud(reset = False, prefix = '1_', with_label= False, world_points=True) 
+    write_pointcloud(reset = False, prefix = '2_', with_label= False) 
     #sample_down_pointcloud()
     filter_points_by_boundingbox()
     convert_rgb()
@@ -1325,6 +1062,7 @@ if __name__ == '__main__':
     fill_color_label()
     compare_labels()
     #storage training data
+    write_pointcloud(reset = False, prefix = 'coloured_', color_by_label=True) 
     write_pointcloud()
     unfreeze()
     rospy.sleep(0.5)

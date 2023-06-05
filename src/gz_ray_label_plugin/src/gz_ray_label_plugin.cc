@@ -77,7 +77,7 @@ class GZRayLabelPlugin : public WorldPlugin
         gazebo::physics::PhysicsEnginePtr engine;
         ignition::math::Vector3d start, end, scale;
         int length = data.points.size();
-        bool showMarker = true;
+        bool showMarker = false;
 
         // RVIZ Ray visualization 
         visualization_msgs::Marker line;
