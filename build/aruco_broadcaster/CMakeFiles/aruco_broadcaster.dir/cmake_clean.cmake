@@ -1,8 +1,7 @@
 file(REMOVE_RECURSE
-  "/home/felix/catkin_ws/devel/lib/aruco_broadcaster/aruco_broadcaster"
-  "/home/felix/catkin_ws/devel/lib/aruco_broadcaster/aruco_broadcaster.pdb"
   "CMakeFiles/aruco_broadcaster.dir/src/aruco_mapping.cpp.o"
-  "CMakeFiles/aruco_broadcaster.dir/src/aruco_mapping.cpp.o.d"
+  "/home/felix/catkin_ws/devel/lib/aruco_broadcaster/aruco_broadcaster.pdb"
+  "/home/felix/catkin_ws/devel/lib/aruco_broadcaster/aruco_broadcaster"
 )
 
 # Per-language clean rules from dependency scanning.

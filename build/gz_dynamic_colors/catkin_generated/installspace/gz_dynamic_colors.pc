@@ -1,0 +1,8 @@
+prefix=/home/felix/catkin_ws/install
+
+Name: gz_dynamic_colors
+Description: Description of gz_dynamic_colors
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib -lrviz /usr/lib/x86_64-linux-gnu/libOgreMain.so /usr/lib/x86_64-linux-gnu/libboost_thread.so /usr/lib/x86_64-linux-gnu/libboost_date_time.so /usr/lib/x86_64-linux-gnu/libboost_system.so /usr/lib/x86_64-linux-gnu/libboost_atomic.so /usr/lib/x86_64-linux-gnu/libboost_chrono.so /usr/lib/x86_64-linux-gnu/libpthread.so
+Requires: roscpp gazebo_ros

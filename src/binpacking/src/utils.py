@@ -12,6 +12,7 @@ from datetime import timedelta as td
 from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_diff import delta_e_cie1976
 from colormath.color_conversions import convert_color
+'''
 from pytransform3d import transformations as pt
 from pytransform3d import rotations as pr
 from pytransform3d.trajectories import transforms_from_pqs
@@ -24,7 +25,7 @@ def transform2(x,y,z, cam_pos = [0,0,0], cam_rot = {'roll':0,'pitch':0,'yaw':0})
 
   x,y,z,s = pt.transform(p,[x,y,z,1])
   return x,y,z
-
+'''
 def deltaE_diff(c1, c2):
     # Reference color.
     color1 = sRGBColor(c1[0],c1[1],c1[2], True)

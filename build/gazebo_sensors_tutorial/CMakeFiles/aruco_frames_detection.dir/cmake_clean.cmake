@@ -1,8 +1,7 @@
 file(REMOVE_RECURSE
-  "/home/felix/catkin_ws/devel/lib/gazebo_sensors_tutorial/aruco_frames_detection"
-  "/home/felix/catkin_ws/devel/lib/gazebo_sensors_tutorial/aruco_frames_detection.pdb"
   "CMakeFiles/aruco_frames_detection.dir/src/aruco_frames_detection.cpp.o"
-  "CMakeFiles/aruco_frames_detection.dir/src/aruco_frames_detection.cpp.o.d"
+  "/home/felix/catkin_ws/devel/lib/gazebo_sensors_tutorial/aruco_frames_detection.pdb"
+  "/home/felix/catkin_ws/devel/lib/gazebo_sensors_tutorial/aruco_frames_detection"
 )
 
 # Per-language clean rules from dependency scanning.

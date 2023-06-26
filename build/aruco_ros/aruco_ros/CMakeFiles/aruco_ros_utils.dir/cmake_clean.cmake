@@ -1,8 +1,7 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/aruco_ros_utils.dir/src/aruco_ros_utils.cpp.o"
   "/home/felix/catkin_ws/devel/lib/libaruco_ros_utils.pdb"
   "/home/felix/catkin_ws/devel/lib/libaruco_ros_utils.so"
-  "CMakeFiles/aruco_ros_utils.dir/src/aruco_ros_utils.cpp.o"
-  "CMakeFiles/aruco_ros_utils.dir/src/aruco_ros_utils.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

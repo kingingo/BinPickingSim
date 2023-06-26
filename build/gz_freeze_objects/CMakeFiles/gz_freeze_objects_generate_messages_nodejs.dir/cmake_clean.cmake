@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/felix/catkin_ws/devel/share/gennodejs/ros/gz_freeze_objects/msg/FreezeModels.js"
   "CMakeFiles/gz_freeze_objects_generate_messages_nodejs"
+  "/home/felix/catkin_ws/devel/share/gennodejs/ros/gz_freeze_objects/msg/FreezeModels.js"
 )
 
 # Per-language clean rules from dependency scanning.

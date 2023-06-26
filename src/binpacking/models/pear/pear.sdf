@@ -25,7 +25,9 @@
           </geometry>
       </collision>
       <visual name="pear_visual">
-        <material><script><name>Gazebo/{color}</name></script></material>
+        <plugin name="gz_dynamic_colors" filename="libgz_dynamic_colors.so">
+          <color>{color_r} {color_g} {color_b} {color_a}</color> <!-- Default Color -->
+        </plugin>
         <geometry>
           <mesh>
             <uri>/home/felix/catkin_ws/src/binpacking/models/pear/meshes/pear.stl</uri>

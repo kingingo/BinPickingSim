@@ -6,7 +6,7 @@ import random
 import numpy as np
 import signal
 from tf2_geometry_msgs import PointStamped, do_transform_point
-from gazebo_msgs.srv import SetModelState, SpawnModel, DeleteModel, GetModelState, GetModelStateRequest, BodyRequest
+from gazebo_msgs.srv import SetModelState, SpawnModel, DeleteModel, GetModelState, GetModelStateRequest, BodyRequest, SetLightProperties
 from gazebo_msgs.msg import ModelState, ContactsState
 from geometry_msgs.msg import Pose, Quaternion, TransformStamped, Point, PoseStamped, Twist
 from sensor_msgs.msg import PointCloud2
@@ -22,10 +22,11 @@ import yaml
 import math
 import pickle
 import time
-from std_msgs.msg import String
+from std_msgs.msg import String, ColorRGBA
 from gz_ray_label_plugin.msg import LabelPoint
 from gz_ray_label_plugin.msg import LabelPoints
 from gz_freeze_objects.msg import FreezeModels
+from gz_dynamic_colors.msg import DColor
 
 freeze_pub = None
 catkin_path = '/home/felix/catkin_ws'
@@ -56,13 +57,12 @@ reset_gz_world = None
 camera_frame = ''
 boundingbox = []
 color_codes = {
-  'Yellow': "255 225 20",
-  'Red': "229 0 0",
+  'Banana': "255 225 20",
+  'Apple': "229 0 0",
   'Orange': "249 115 6",
-  'Blue': "3 67 223",
-  'Brown': "101 55 0",
+  'Stackingbox': "3 67 223",
   'Pear': "203 248 95",
-  "Purple": "255 0 255"
+  "Plum": "255 0 255"
   }
 object_color_codes = []
 
@@ -567,6 +567,10 @@ def _get_xml(model_name, color = 'Yellow', joint = False, static = False, catId 
 def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static = False, catId = 0):
   global object_color_codes 
   xml = open(package_path + '/models/'+path+file_name+'.sdf', 'r').read()
+  rgb = color_codes[color].strip().split(' ')
+  r = int(rgb[0])
+  g = int(rgb[1])
+  b = int(rgb[2])
 
   found = False
   if catId >= 0:
@@ -580,15 +584,30 @@ def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static
     found = True
   
   if not found:
-    rgb = color_codes[color].strip().split(' ')
-    r = int(rgb[0])
-    g = int(rgb[1])
-    b = int(rgb[2])
-    log("Add {} with {}/{}/{} catId={}".format(model_name, r, g, b, catId))
     object_color_codes.append({'name':model_name, 'r':r, 'g':g, 'b':b,'color':color, 'catId':catId})
 
-  return xml.format(model_name=model_name, color = color, joint = '' if not joint else joint, static = 'false' if not static else 'true')
+  return xml.format(model_name=model_name, color = '', color_r = r, color_g = g, color_b = b, color_a = 1.0, joint = '' if not joint else joint, static = 'false' if not static else 'true')
 
+def set_model_colours():
+  global object_color_codes 
+  log("set_model_colours")
+  for i in range(len(object_color_codes)):
+    model = object_color_codes[i]['name']
+    pub =  rospy.Publisher("/{}_color".format(model), DColor, queue_size = 2)
+    r = object_color_codes[i]['r']
+    g = object_color_codes[i]['g']
+    b = object_color_codes[i]['b']
+
+    color = DColor()
+    color.r = float(r/255)
+    color.g = float(g/255)
+    color.b = float(b/255)
+    color.a = float(1)
+    log("pub to /{}_color".format(model))
+    pub.publish(color)
+    rospy_sleep(1)
+    log("sets colours to publisher /{}_color".format(model))
+    pub.unregister()
 
 def send_world_frame(x, y, z,frame_id = "ray_frame", child_frame = "map", roll = 0, pitch = 0, yaw = 0, rx = None, ry = None, rz = None, rw = None):
   rot = euler_to_quaternion(roll, pitch, yaw)
@@ -980,7 +999,7 @@ if __name__ == '__main__':
   #camera_set_pose(pos['x'], pos['y'], pos['z'], pos['roll'], pos['pitch'], pos['yaw'])
 
   #spawn stackingbox
-  xml = _get_xml('stackingbox', 'Blue', catId=1)
+  xml = _get_xml(model_name = 'stackingbox', color = 'Stackingbox', catId=1)
   spawn_xml('1_stackingbox', xml, add_to_list=False)
   #init transform function from cp to wp
   tf_buffer = tf2_ros.Buffer()
@@ -1013,11 +1032,11 @@ if __name__ == '__main__':
     delete_spawned_objects()
     log("done with checkpoint :)")
 
-  banana_xml = get_xml('banana', '/banana/', 'banana', 'Yellow', catId=2)
-  apple_xml = get_xml('apple', '/apple/', 'apple', 'Red', catId=3)
+  banana_xml = get_xml('banana', '/banana/', 'banana', 'Banana', catId=2)
+  apple_xml = get_xml('apple', '/apple/', 'apple', 'Apple', catId=3)
   orange_xml = get_xml('orange', '/orange/', 'orange', 'Orange', catId=4)
   pear_xml = get_xml('pear', '/pear/', 'pear', 'Pear', catId=5)
-  plum_xml = get_xml('plum', '/plum/', 'plum', 'Purple', catId=6)
+  plum_xml = get_xml('plum', '/plum/', 'plum', 'Plum', catId=6)
   sleeptime = 3
 
   '''
@@ -1031,11 +1050,11 @@ if __name__ == '__main__':
   for i in range(1000):
     start_time = time.time()
     xmls = [
-      {'name':'banana','catId':2, 'xml':banana_xml, 'amount':5 + random.randint(5,15)},
-      {'name':'apple','catId':3, 'xml':apple_xml, 'amount':5 + random.randint(5,15)},
-      {'name':'orange','catId':4, 'xml':orange_xml, 'amount':5 + random.randint(5,15)},
-      {'name':'pear','catId':5, 'xml':pear_xml, 'amount':5 + random.randint(5,15)},
-      {'name':'plum','catId':6, 'xml':plum_xml, 'amount':5 + random.randint(5,15)}
+      {'name':'banana','catId':2, 'xml':banana_xml, 'amount':10 + random.randint(1,15)},
+      {'name':'apple','catId':3, 'xml':apple_xml, 'amount':10 + random.randint(1,15)},
+      {'name':'orange','catId':4, 'xml':orange_xml, 'amount':10 + random.randint(1,15)},
+      {'name':'pear','catId':5, 'xml':pear_xml, 'amount':10 + random.randint(1,15)},
+      {'name':'plum','catId':6, 'xml':plum_xml, 'amount':10 + random.randint(1,15)}
     ]
     #spawn objects in box
     spawn_objects(xmls, dx = 0.05, dy = 0.05, dz = 0.01)

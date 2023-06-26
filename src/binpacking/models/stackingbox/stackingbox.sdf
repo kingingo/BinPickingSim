@@ -40,7 +40,10 @@
             <scale>3 3 3</scale>
           </mesh>
         </geometry>
-        <material><script><name>Gazebo/{color}</name></script></material>
+        <!--<material><script><name>Gazebo/{color}</name></script></material>-->
+        <plugin name="gz_dynamic_colors" filename="libgz_dynamic_colors.so">
+          <color>{color_r} {color_g} {color_b} {color_a}</color> <!-- Default Color -->
+      </plugin>
       </visual>
      </link>
   </model>

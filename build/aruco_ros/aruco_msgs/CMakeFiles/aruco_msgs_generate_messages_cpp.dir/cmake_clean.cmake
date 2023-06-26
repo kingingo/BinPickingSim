@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/aruco_msgs_generate_messages_cpp"
   "/home/felix/catkin_ws/devel/include/aruco_msgs/Marker.h"
   "/home/felix/catkin_ws/devel/include/aruco_msgs/MarkerArray.h"
-  "CMakeFiles/aruco_msgs_generate_messages_cpp"
 )
 
 # Per-language clean rules from dependency scanning.

@@ -1,10 +1,8 @@
 file(REMOVE_RECURSE
-  "/home/felix/catkin_ws/devel/lib/aruco_ros/single"
-  "/home/felix/catkin_ws/devel/lib/aruco_ros/single.pdb"
-  "CMakeFiles/single.dir/src/aruco_ros_utils.cpp.o"
-  "CMakeFiles/single.dir/src/aruco_ros_utils.cpp.o.d"
   "CMakeFiles/single.dir/src/simple_single.cpp.o"
-  "CMakeFiles/single.dir/src/simple_single.cpp.o.d"
+  "CMakeFiles/single.dir/src/aruco_ros_utils.cpp.o"
+  "/home/felix/catkin_ws/devel/lib/aruco_ros/single.pdb"
+  "/home/felix/catkin_ws/devel/lib/aruco_ros/single"
 )
 
 # Per-language clean rules from dependency scanning.
