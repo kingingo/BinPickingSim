@@ -62,7 +62,8 @@ color_codes = {
   'Orange': "249 115 6",
   'Stackingbox': "3 67 223",
   'Pear': "203 248 95",
-  "Plum": "255 0 255"
+  "Plum": "255 0 255",
+  "Toothbrush": "252 252 252"
   }
 object_color_codes = []
 
@@ -321,14 +322,14 @@ def subscribe_to_camera(skip_data = 4):
   log("done with sleeping... lets continue")
   log("Volume {}".format(len(xpoint)))
    
-def get_path(format = 'ply'):
+def get_path(format = 'ply', amount = 0):
   global path
 
   if path is not None:
     return path
 
   now = dt.now()
-  _path = catkin_path + '/synthetic_data/'+format+'/synthetic_pc_'+now.strftime('%d-%m-%Y_%H-%M-%S')
+  _path = "{}/synthetic_data/{}/synthetic_pc_{}_a{}".format(catkin_path,format,now.strftime('%d-%m-%Y_%H-%M-%S'),amount)
   path = _path
 
   if not os.path.exists(_path):
@@ -339,7 +340,7 @@ def clear_path():
   global path
   path = None
 
-def reset_world():
+def reset_world(_clear_path = True):
   #clear lists
   del xpoint[:]
   del ypoint[:]
@@ -348,7 +349,8 @@ def reset_world():
   del worldpoints[:]
   del clabelpoint[:]
   del labelpoint[:]
-  clear_path()
+  if _clear_path:
+    clear_path()
 
 def get_label_color(label):
   for data in object_color_codes:
@@ -357,7 +359,7 @@ def get_label_color(label):
   return 0, 0, 0
 
 def write_pointcloud(format = 'ply', reset = True, prefix = '', color_by_label = False, with_label = True, RGB = True, world_points = False):
-  global xpoint, ypoint, zpoint, labelpoint, clabelpoint, worldpoints
+  global xpoint, ypoint, zpoint, labelpoint, clabelpoint, worldpoints, spawned_objects
 
   if not (format is 'ply' or format is 'txt'):
     log("file format {} not supported".format(format))
@@ -370,8 +372,9 @@ def write_pointcloud(format = 'ply', reset = True, prefix = '', color_by_label =
   def wr(m):
     fid.write(str(m).encode('utf-8'))
 
-  path = get_path()
-  filename = prefix + 'data'+( '' if not pointcloud_sampled_down else '_min' )+'.'+format
+  _amount = len(spawned_objects)
+  path = get_path(amount = _amount)
+  filename = '{}data{}_a{}.{}'.format(prefix,( '' if not pointcloud_sampled_down else '_min' ),_amount,format)
   filepath = path + '/' + filename
   log("write pointcloud to {}".format(filename))
   fid = open(filepath, 'wb')
@@ -561,10 +564,10 @@ def joint_xml(model_name, px = 0, py = 0, pz = 0, pitch = 0, roll = 0, yaw = 0):
     </joint>
   """.format(model_name = model_name, px = px, py = py, pz = pz, qx = qx, qy = qy, qz = qz, qw = qw)
 
-def _get_xml(model_name, color = 'Yellow', joint = False, static = False, catId = 0):
-  return get_xml(model_name, '/' + model_name + '/', model_name, color, joint=joint, static=static, catId=catId)
+def _get_xml(model_name, color = 'Yellow', joint = False, static = False, catId = 0, version = '', color_a = 1.0):
+  return get_xml(model_name, '/' + model_name + '/', model_name, color, joint=joint, static=static, catId=catId, version = version, color_a = color_a)
 
-def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static = False, catId = 0):
+def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static = False, catId = 0, version = '', color_a = 1.0):
   global object_color_codes 
   xml = open(package_path + '/models/'+path+file_name+'.sdf', 'r').read()
   rgb = color_codes[color].strip().split(' ')
@@ -586,7 +589,7 @@ def get_xml(model_name, path, file_name, color = 'Yellow', joint = False, static
   if not found:
     object_color_codes.append({'name':model_name, 'r':r, 'g':g, 'b':b,'color':color, 'catId':catId})
 
-  return xml.format(model_name=model_name, color = '', color_r = r, color_g = g, color_b = b, color_a = 1.0, joint = '' if not joint else joint, static = 'false' if not static else 'true')
+  return xml.format(model_name=model_name, version = version, color = '', color_r = r, color_g = g, color_b = b, color_a = color_a, joint = '' if not joint else joint, static = 'false' if not static else 'true')
 
 def set_model_colours():
   global object_color_codes 
@@ -648,7 +651,13 @@ def spawn_objects(xmls, is_sdf = True, start_id = 0, dx = 0, dy = 0, dz = 0):
   for i in settings:
     name = xmls[i]['name']
     catId = xmls[i]['catId']
-    xml = xmls[i]['xml']
+
+    length = len(xmls[i]['xml'])
+    if length > 1:
+      xml = xmls[i]['xml'][random.randint(0,length-1)]
+    else:
+      xml = xmls[i]['xml'][0]
+
     id = xmls[i]['counter']
     xmls[i]['counter']=xmls[i]['counter']+1
 
@@ -684,7 +693,7 @@ def convert_rgb():
     _rgb.append(float_to_rgb(rgbpoint[i]))
 
   rgbpoint = _rgb
-  log("done :)")
+  log("convert rgb done :)")
 
 def clear_all_forces():
   for obj in spawned_objects:
@@ -826,6 +835,9 @@ def label_points_by_ray():
   sub = rospy.Subscriber("/ray/labeled/points", LabelPoints, callback_ray_labeled_points)
   cloud = LabelPoints()
   cloud.scaling = 0.03
+  cloud.start_z = 0.5
+  cloud.rating = 3000
+  cloud.showMarker = False
 
   length = len(worldpoints)
   for i in range(length):
@@ -867,11 +879,19 @@ def compare_labels():
   for i in range(len(count_map)):
     log("catId: {} found euqal {}".format(i, count_map[i]))
 
-def unfreeze():
+def unfreeze(models = []):
   global freeze_pub
+
   msg = FreezeModels()
   msg.freeze = False
+  
+  if not models:
+    for i in range(len(models)):
+      msg.models.append(models[i])
+
   freeze_pub.publish(msg)
+
+  
 
 def freeze():
   global freeze_pub
@@ -956,6 +976,80 @@ def remove_falling_out_obj():
     delete_object(obj)
     spawned_objects.remove(obj)
 
+def scan_szene():
+  subscribe_to_camera()
+  filter_points_by_colours()
+  transform_points()
+  filter_points_by_boundingbox()
+  convert_rgb()
+  label_points_by_ray()
+  fill_color_label()
+  compare_labels()
+
+def test_cases():
+  banana_xml = get_xml('banana', '/banana/', 'banana', 'Banana', catId=2)
+  apple_xml = get_xml('apple', '/apple/', 'apple', 'Apple', catId=3)
+  orange_xml = get_xml('orange', '/orange/', 'orange', 'Orange', catId=4)
+  pear_xml = get_xml('pear', '/pear/', 'pear', 'Pear', catId=5)
+  plum_xml = get_xml('plum', '/plum/', 'plum', 'Plum', catId=6)
+
+  start_time = time.time()
+  xmls = [
+    {'name':'banana','catId':2, 'xml':[banana_xml], 'amount':10 + random.randint(1,10)},
+    {'name':'apple','catId':3, 'xml':[apple_xml], 'amount':10 + random.randint(1,10)},
+    {'name':'orange','catId':4, 'xml':[orange_xml], 'amount':10 + random.randint(1,10)},
+    {'name':'pear','catId':5, 'xml':[pear_xml], 'amount':10 + random.randint(1,10)},
+    {'name':'plum','catId':6, 'xml':[plum_xml], 'amount':10 + random.randint(1,10)}
+  ]
+  #spawn objects in box
+  spawn_objects(xmls, dx = 0.05, dy = 0.05, dz = 0.01)
+
+  '''
+  xml_toothbrush = get_xml('hammer', '/hammer/', 'model', 'Toothbrush', catId=7)
+  for i in range(2):
+    px = random.uniform(boundingbox['x']['min'] + 0.05, boundingbox['x']['max'] - 0.05)
+    py = random.uniform(boundingbox['y']['min'] + 0.05, boundingbox['y']['max'] - 0.05)
+    pz = random.uniform(boundingbox['z']['min'] + 0.01, boundingbox['z']['max'] - 0.01)
+    spawn_xml('7_{}_hamma'.format(i), xml_toothbrush, px = px, py = py, pz = pz)
+  '''
+  rospy_sleep(1)
+  log("done sleeping lets start")
+  remove_falling_out_obj()
+  freeze()
+
+  rospy_sleep(0.5)
+  scan_szene()
+  #storage training data
+  write_pointcloud(reset = False, prefix = '1_coloured_', color_by_label=True) 
+  write_pointcloud(reset = False, prefix = '1_labeled_')
+  reset_world(_clear_path = False)
+
+  #Remove one object best case one of the TOP
+  for i in range(2):
+    remove_obj = None
+    remove_pos = None
+    z_pose = -1
+    for obj in spawned_objects:
+      pose = get_pose(obj)
+
+      if pose.position.z > z_pose:
+        remove_pos = pose.position
+        remove_obj = obj
+
+    log("Remove model {} pos: {}/{}/{}".format(remove_obj,remove_pos.x, remove_pos.y, remove_pos.z))
+    unfreeze([remove_obj])
+    delete_model(remove_obj)
+
+  scan_szene()
+  write_pointcloud(reset = False, prefix = '2_coloured_', color_by_label=True) 
+  write_pointcloud(reset = False, prefix = '2_labeled_')
+
+  unfreeze()
+  rospy.sleep(0.5)
+  delete_spawned_objects()
+  diff_time = time.time() - start_time
+  log("the round took {}".format(td(seconds = diff_time)))
+
 if __name__ == '__main__':
   global delete_model, spawn_sdf_model, spawn_urdf_model, set_state, get_state
 
@@ -1032,29 +1126,27 @@ if __name__ == '__main__':
     delete_spawned_objects()
     log("done with checkpoint :)")
 
+
+  test_cases()
+
+  rospy.spin() 
+
   banana_xml = get_xml('banana', '/banana/', 'banana', 'Banana', catId=2)
   apple_xml = get_xml('apple', '/apple/', 'apple', 'Apple', catId=3)
   orange_xml = get_xml('orange', '/orange/', 'orange', 'Orange', catId=4)
   pear_xml = get_xml('pear', '/pear/', 'pear', 'Pear', catId=5)
   plum_xml = get_xml('plum', '/plum/', 'plum', 'Plum', catId=6)
+  plum2_xml = get_xml('plum', '/plum/', 'plum', 'Plum', catId=6, version = '2')
   sleeptime = 3
-
-  '''
-  xmls = [
-    {'name':'banana','catId':2, 'xml':banana_xml, 'amount':3},
-    {'name':'apple','catId':3, 'xml':apple_xml, 'amount':3},
-    {'name':'orange','catId':4, 'xml':orange_xml, 'amount':3},
-    {'name':'pear','catId':5, 'xml':pear_xml, 'amount':3}
-  ]
-  '''
+  
   for i in range(1000):
     start_time = time.time()
     xmls = [
-      {'name':'banana','catId':2, 'xml':banana_xml, 'amount':10 + random.randint(1,15)},
-      {'name':'apple','catId':3, 'xml':apple_xml, 'amount':10 + random.randint(1,15)},
-      {'name':'orange','catId':4, 'xml':orange_xml, 'amount':10 + random.randint(1,15)},
-      {'name':'pear','catId':5, 'xml':pear_xml, 'amount':10 + random.randint(1,15)},
-      {'name':'plum','catId':6, 'xml':plum_xml, 'amount':10 + random.randint(1,15)}
+      {'name':'banana','catId':2, 'xml':[banana_xml], 'amount':10 + random.randint(1,50)},
+      {'name':'apple','catId':3, 'xml':[apple_xml], 'amount':10 + random.randint(1,50)},
+      {'name':'orange','catId':4, 'xml':[orange_xml], 'amount':10 + random.randint(1,50)},
+      {'name':'pear','catId':5, 'xml':[pear_xml], 'amount':10 + random.randint(1,50)},
+      {'name':'plum','catId':6, 'xml':[plum_xml, plum2_xml], 'amount':10 + random.randint(1,50)}
     ]
     #spawn objects in box
     spawn_objects(xmls, dx = 0.05, dy = 0.05, dz = 0.01)

@@ -39,8 +39,18 @@ def freeze_callback(data):
         freezed_models.append({'model':model, 'state':model_state})
         log("freeze {}".format(model))
   else:
-    del freezed_models[:]
-    log("clear freeze list")
+    models = data.models
+
+    if not models:
+      del freezed_models[:]
+      log("clear freeze list")
+    else:
+      for i in range(len(models)):
+        for j in range(len(freezed_models)):
+          if freezed_models[j]['model'] == models[i]:
+            freezed_models.remove(freezed_models[j])
+            log("remove model {} from freeze list".format(models[i]))
+            break
 
 def log(msg):
   now = dt.now()
@@ -66,6 +76,7 @@ if __name__ == '__main__':
                 print("An exception occurred")
                 freezed_models.remove(data)
             except IndexError as e:
+              print("An exception occurred: {}".format(e))
               break
         rate.sleep()
               

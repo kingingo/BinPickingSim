@@ -1,0 +1,39 @@
+<?xml version='1.0'?>
+<sdf version ='1.4'>
+     
+  <model name ='{model_name}'>
+    <self_collide>1</self_collide>
+    <link name ='{model_name}_link'> 
+      <inertial>
+        <mass>1</mass>
+        <inertia> 
+          <ixx>847.382446E-10</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) 0.00973 -->
+          <ixy>1.555826E-10</ixy>         <!-- for a box: ixy = 0 -->
+          <ixz>59.782806E-10</ixz>         <!-- for a box: ixz = 0 -->
+          <iyy>850.587402E-10</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) 0.00523 -->
+          <iyz>-24.307676E-10</iyz>         <!-- for a box: iyz = 0 -->
+          <izz>11.1861E-10</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) 0.01256 -->
+        </inertia>
+      </inertial>
+      <collision name="{model_name}_collision">
+        <geometry>
+          <mesh>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/toothbrush/meshes/toothbrush.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="{model_name}_visual">
+        <geometry>
+          <mesh>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/toothbrush/meshes/toothbrush.stl</uri>
+          </mesh>
+        </geometry>
+        <!--<material><script><name>Gazebo/{color}</name></script></material>-->
+        <plugin name="gz_dynamic_colors" filename="libgz_dynamic_colors.so">
+          <color>{color_r} {color_g} {color_b} {color_a}</color> <!-- Default Color -->
+      </plugin>
+      </visual>
+     </link>
+  </model>
+</sdf>
+

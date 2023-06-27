@@ -9,14 +9,14 @@ import struct
 import gz_ray_label_plugin.msg
 
 class LabelPoints(genpy.Message):
-  _md5sum = "8347644e8dcf1da2f7bcbc3665d4c78e"
+  _md5sum = "d9b71de3dcafd53b25491b7d106c121a"
   _type = "gz_ray_label_plugin/LabelPoints"
   _has_header = False  # flag to mark the presence of a Header object
   _full_text = """LabelPoint[] points
-float32 scaling = 0.05
-float32 start_z = 0.5
-int32 rating = 800
-bool showMarker = 0
+float32 scaling 
+float32 start_z 
+int32 rating 
+bool showMarker 
 ================================================================================
 MSG: gz_ray_label_plugin/LabelPoint
 float32 x
@@ -25,14 +25,8 @@ float32 z
 int32 index
 float64 dist
 string entityName"""
-  # Pseudo-constants
-  scaling = 0.05
-  start_z = 0.5
-  rating = 800
-  showMarker = False
-
-  __slots__ = ['points']
-  _slot_types = ['gz_ray_label_plugin/LabelPoint[]']
+  __slots__ = ['points','scaling','start_z','rating','showMarker']
+  _slot_types = ['gz_ray_label_plugin/LabelPoint[]','float32','float32','int32','bool']
 
   def __init__(self, *args, **kwds):
     """
@@ -42,7 +36,7 @@ string entityName"""
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       points
+       points,scaling,start_z,rating,showMarker
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -53,8 +47,20 @@ string entityName"""
       # message fields cannot be None, assign default values for those that are
       if self.points is None:
         self.points = []
+      if self.scaling is None:
+        self.scaling = 0.
+      if self.start_z is None:
+        self.start_z = 0.
+      if self.rating is None:
+        self.rating = 0
+      if self.showMarker is None:
+        self.showMarker = False
     else:
       self.points = []
+      self.scaling = 0.
+      self.start_z = 0.
+      self.rating = 0
+      self.showMarker = False
 
   def _get_types(self):
     """
@@ -79,6 +85,8 @@ string entityName"""
           _x = _x.encode('utf-8')
           length = len(_x)
         buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      _x = self
+      buff.write(_get_struct_2fiB().pack(_x.scaling, _x.start_z, _x.rating, _x.showMarker))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -113,6 +121,11 @@ string entityName"""
         else:
           val1.entityName = str[start:end]
         self.points.append(val1)
+      _x = self
+      start = end
+      end += 13
+      (_x.scaling, _x.start_z, _x.rating, _x.showMarker,) = _get_struct_2fiB().unpack(str[start:end])
+      self.showMarker = bool(self.showMarker)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -136,6 +149,8 @@ string entityName"""
           _x = _x.encode('utf-8')
           length = len(_x)
         buff.write(struct.Struct('<I%ss'%length).pack(length, _x))
+      _x = self
+      buff.write(_get_struct_2fiB().pack(_x.scaling, _x.start_z, _x.rating, _x.showMarker))
     except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(locals().get('_x', self)))))
     except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(locals().get('_x', self)))))
 
@@ -171,6 +186,11 @@ string entityName"""
         else:
           val1.entityName = str[start:end]
         self.points.append(val1)
+      _x = self
+      start = end
+      end += 13
+      (_x.scaling, _x.start_z, _x.rating, _x.showMarker,) = _get_struct_2fiB().unpack(str[start:end])
+      self.showMarker = bool(self.showMarker)
       return self
     except struct.error as e:
       raise genpy.DeserializationError(e)  # most likely buffer underfill
@@ -179,6 +199,12 @@ _struct_I = genpy.struct_I
 def _get_struct_I():
     global _struct_I
     return _struct_I
+_struct_2fiB = None
+def _get_struct_2fiB():
+    global _struct_2fiB
+    if _struct_2fiB is None:
+        _struct_2fiB = struct.Struct("<2fiB")
+    return _struct_2fiB
 _struct_3fid = None
 def _get_struct_3fid():
     global _struct_3fid

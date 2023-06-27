@@ -112,7 +112,7 @@ class GZRayLabelPlugin : public WorldPlugin
         int c = 1;
         int f = 0;
         int d = 0;
-        //ros::Rate r(2000);
+        ros::Rate r(2000);
         length = data.points.size();
         d = length / 100;
         c = 1;
@@ -164,7 +164,7 @@ class GZRayLabelPlugin : public WorldPlugin
 
             if(showMarker){
                 marker_publisher.publish(line);
-                //r.sleep();
+                r.sleep();
             }
         }
         ray.reset();

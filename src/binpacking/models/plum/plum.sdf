@@ -20,7 +20,7 @@
       <collision name="plum_collision">
           <geometry>
             <mesh>
-              <uri>/home/felix/catkin_ws/src/binpacking/models/plum/meshes/plum.stl</uri>
+              <uri>/home/felix/catkin_ws/src/binpacking/models/plum/meshes/plum{version}.stl</uri>
             </mesh>
           </geometry>
       </collision>
@@ -31,7 +31,7 @@
         </plugin>
         <geometry>
           <mesh>
-            <uri>/home/felix/catkin_ws/src/binpacking/models/plum/meshes/plum.stl</uri>
+            <uri>/home/felix/catkin_ws/src/binpacking/models/plum/meshes/plum{version}.stl</uri>
           </mesh>
         </geometry>
       </visual>

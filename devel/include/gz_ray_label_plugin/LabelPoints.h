@@ -25,10 +25,18 @@ struct LabelPoints_
   typedef LabelPoints_<ContainerAllocator> Type;
 
   LabelPoints_()
-    : points()  {
+    : points()
+    , scaling(0.0)
+    , start_z(0.0)
+    , rating(0)
+    , showMarker(false)  {
     }
   LabelPoints_(const ContainerAllocator& _alloc)
-    : points(_alloc)  {
+    : points(_alloc)
+    , scaling(0.0)
+    , start_z(0.0)
+    , rating(0)
+    , showMarker(false)  {
   (void)_alloc;
     }
 
@@ -37,29 +45,21 @@ struct LabelPoints_
    typedef std::vector< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> , typename std::allocator_traits<ContainerAllocator>::template rebind_alloc< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >> _points_type;
   _points_type points;
 
+   typedef float _scaling_type;
+  _scaling_type scaling;
+
+   typedef float _start_z_type;
+  _start_z_type start_z;
+
+   typedef int32_t _rating_type;
+  _rating_type rating;
+
+   typedef uint8_t _showMarker_type;
+  _showMarker_type showMarker;
 
 
-// reducing the odds to have name collisions with Windows.h 
-#if defined(_WIN32) && defined(scaling)
-  #undef scaling
-#endif
-#if defined(_WIN32) && defined(start_z)
-  #undef start_z
-#endif
-#if defined(_WIN32) && defined(rating)
-  #undef rating
-#endif
-#if defined(_WIN32) && defined(showMarker)
-  #undef showMarker
-#endif
 
-  enum {
-    rating = 800,
-  };
 
-  static const float scaling;
-  static const float start_z;
-  static const uint8_t showMarker;
 
   typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> > Ptr;
   typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> const> ConstPtr;
@@ -72,35 +72,6 @@ typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints > LabelPointsPtr;
 typedef boost::shared_ptr< ::gz_ray_label_plugin::LabelPoints const> LabelPointsConstPtr;
 
 // constants requiring out of line definition
-
-   
-   template<typename ContainerAllocator> const float
-      LabelPoints_<ContainerAllocator>::scaling =
-        
-          0.05
-        
-        ;
-   
-
-   
-   template<typename ContainerAllocator> const float
-      LabelPoints_<ContainerAllocator>::start_z =
-        
-          0.5
-        
-        ;
-   
-
-   
-
-   
-   template<typename ContainerAllocator> const uint8_t
-      LabelPoints_<ContainerAllocator>::showMarker =
-        
-           0
-        
-        ;
-   
 
 
 
@@ -115,7 +86,11 @@ return s;
 template<typename ContainerAllocator1, typename ContainerAllocator2>
 bool operator==(const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator1> & lhs, const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator2> & rhs)
 {
-  return lhs.points == rhs.points;
+  return lhs.points == rhs.points &&
+    lhs.scaling == rhs.scaling &&
+    lhs.start_z == rhs.start_z &&
+    lhs.rating == rhs.rating &&
+    lhs.showMarker == rhs.showMarker;
 }
 
 template<typename ContainerAllocator1, typename ContainerAllocator2>
@@ -172,12 +147,12 @@ struct MD5Sum< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "8347644e8dcf1da2f7bcbc3665d4c78e";
+    return "d9b71de3dcafd53b25491b7d106c121a";
   }
 
   static const char* value(const ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x8347644e8dcf1da2ULL;
-  static const uint64_t static_value2 = 0xf7bcbc3665d4c78eULL;
+  static const uint64_t static_value1 = 0xd9b71de3dcafd53bULL;
+  static const uint64_t static_value2 = 0x25491b7d106c121aULL;
 };
 
 template<class ContainerAllocator>
@@ -197,10 +172,10 @@ struct Definition< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
   static const char* value()
   {
     return "LabelPoint[] points\n"
-"float32 scaling = 0.05\n"
-"float32 start_z = 0.5\n"
-"int32 rating = 800\n"
-"bool showMarker = 0\n"
+"float32 scaling \n"
+"float32 start_z \n"
+"int32 rating \n"
+"bool showMarker \n"
 "================================================================================\n"
 "MSG: gz_ray_label_plugin/LabelPoint\n"
 "float32 x\n"
@@ -228,6 +203,10 @@ namespace serialization
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
       stream.next(m.points);
+      stream.next(m.scaling);
+      stream.next(m.start_z);
+      stream.next(m.rating);
+      stream.next(m.showMarker);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER
@@ -254,6 +233,14 @@ struct Printer< ::gz_ray_label_plugin::LabelPoints_<ContainerAllocator> >
       s << indent;
       Printer< ::gz_ray_label_plugin::LabelPoint_<ContainerAllocator> >::stream(s, indent + "    ", v.points[i]);
     }
+    s << indent << "scaling: ";
+    Printer<float>::stream(s, indent + "  ", v.scaling);
+    s << indent << "start_z: ";
+    Printer<float>::stream(s, indent + "  ", v.start_z);
+    s << indent << "rating: ";
+    Printer<int32_t>::stream(s, indent + "  ", v.rating);
+    s << indent << "showMarker: ";
+    Printer<uint8_t>::stream(s, indent + "  ", v.showMarker);
   }
 };
 
