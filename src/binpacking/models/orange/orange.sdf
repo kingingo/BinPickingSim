@@ -22,16 +22,19 @@
           <geometry>
             <mesh>
               <uri>/home/felix/catkin_ws/src/binpacking/models/orange/meshes/orange.stl</uri>
+              <scale>{scale_x} {scale_y} {scale_z}</scale>
             </mesh>
           </geometry>
       </collision>
       <visual name="orange_visual">
         <plugin name="gz_dynamic_colors" filename="libgz_dynamic_colors.so">
           <color>{color_r} {color_g} {color_b} {color_a}</color> <!-- Default Color -->
+          <scale>{scale_x} {scale_y} {scale_z}</scale>
         </plugin>
         <geometry>
           <mesh>
             <uri>/home/felix/catkin_ws/src/binpacking/models/orange/meshes/orange.stl</uri>
+            <scale>{scale_x} {scale_y} {scale_z}</scale>
           </mesh>
         </geometry>
       </visual>

@@ -21,6 +21,7 @@
           <geometry>
             <mesh>
               <uri>/home/felix/catkin_ws/src/binpacking/models/pear/meshes/pear.stl</uri>
+              <scale>{scale_x} {scale_y} {scale_z}</scale>
             </mesh>
           </geometry>
       </collision>
@@ -31,6 +32,7 @@
         <geometry>
           <mesh>
             <uri>/home/felix/catkin_ws/src/binpacking/models/pear/meshes/pear.stl</uri>
+            <scale>{scale_x} {scale_y} {scale_z}</scale>
           </mesh>
         </geometry>
       </visual>

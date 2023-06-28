@@ -27,6 +27,7 @@
         <geometry>
           <mesh>
             <uri>model://hammer/meshes/hammer.dae</uri>
+            <scale>{scale_x} {scale_y} {scale_z}</scale>
           </mesh>
         </geometry>
       </collision>
@@ -34,6 +35,7 @@
         <geometry>
           <mesh>
             <uri>model://hammer/meshes/hammer.dae</uri>
+            <scale>{scale_x} {scale_y} {scale_z}</scale>
           </mesh>
         </geometry>
       </visual>

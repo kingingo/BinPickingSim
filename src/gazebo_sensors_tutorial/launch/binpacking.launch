@@ -4,7 +4,7 @@
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
-  <arg name="gui" default="true"/>
+  <arg name="gui" default="false"/>
   <arg name="headless" default="false"/>
   <arg name="checkpoint" default="" />
   <arg name="debug" default="false"/>
@@ -27,9 +27,9 @@
   <node pkg="tf" type="static_transform_publisher" name="correct_kinect_frame" args="0 0 0 4.71238898038469 0.0 4.71238898038469 depth_camera_link kinect_optical_link 10"/>  
   <node pkg="tf2_ros" type="static_transform_publisher" name="world_broadcaster" args="0.0 0.0 1.9 0.0 1.5707963267948966 0.0 map depth_camera_link" /> 
  
-  <!-- Show in Rviz 
+  <!-- Show in Rviz  
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sensors_tutorial)/config/kinect_coke.rviz"/> 
-  --> 
+ --> 
    
   <node name="binpacking" pkg="binpacking" type="binpacking.py" output="screen">
       <param name='checkpoint' value="$(arg checkpoint)"/>

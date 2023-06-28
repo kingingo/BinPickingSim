@@ -32,6 +32,7 @@
           <geometry>
             <mesh>
               <uri>/home/felix/catkin_ws/src/binpacking/models/banana/meshes/banana.stl</uri>
+              <scale>{scale_x} {scale_y} {scale_z}</scale>
             </mesh>
           </geometry>
       </collision>
@@ -42,6 +43,7 @@
         <geometry>
           <mesh>
             <uri>/home/felix/catkin_ws/src/binpacking/models/banana/meshes/banana.stl</uri>
+            <scale>{scale_x} {scale_y} {scale_z}</scale>
           </mesh>
         </geometry>
       </visual>
